@@ -106,6 +106,17 @@ def format_output_row(row: proto.Message, attributes):
     }
 
 
+def get_field_mask(resource: proto.Message):
+    """Returns a FieldMask for all set fields on a protobuf message.
+
+    Uses proto-plus built-in wrapping to generate the correct FieldMask
+    compatible with Google Ads API protobuf messages.
+    """
+    from google.api_core.protobuf_helpers import field_mask
+
+    return field_mask(None, resource._pb)
+
+
 def get_gaql_resources_filepath():
     package_root = importlib.resources.files("ads_mcp")
     file_path = package_root.joinpath(_GAQL_FILENAME)
