@@ -1,0 +1,94 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # Daily at 9:00 UTC (18:00 JST)
+  workflow_dispatch: # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/googleads/google-ads-mcp.git
+
+      - name: Fetch upstream
+        run: git fetch upstream main
+
+      - name: Merge upstream/main into main
+        id: merge-main
+        run: |
+          if git merge upstream/main --no-edit; then
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Push main
+        if: steps.merge-main.outputs.merged == 'true'
+        run: git push origin main
+
+      - name: Check if main has new commits for feat/write-tools
+        if: steps.merge-main.outputs.merged == 'true'
+        id: check-diff
+        run: |
+          git fetch origin feat/write-tools
+          if git log origin/feat/write-tools..main --oneline | grep -q .; then
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge main into feat/write-tools
+        if: steps.check-diff.outputs.has_updates == 'true'
+        id: merge-write-tools
+        run: |
+          git checkout feat/write-tools
+          if git merge main --no-edit; then
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+            git push origin feat/write-tools
+          else
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Create PR on conflict
+        if: steps.merge-main.outputs.merged == 'false' || steps.merge-write-tools.outputs.merged == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CONFLICT_TARGET="main"
+          if [ "${{ steps.merge-write-tools.outputs.merged }}" = "false" ]; then
+            CONFLICT_TARGET="feat/write-tools"
+          fi
+          gh issue create \
+            --title "Upstream sync conflict: manual merge required ($CONFLICT_TARGET)" \
+            --body "Automated upstream sync failed due to merge conflict on \`$CONFLICT_TARGET\`.
+
+          ## Steps to resolve
+
+          \`\`\`bash
+          git fetch upstream
+          git checkout $CONFLICT_TARGET
+          git merge upstream/main  # or: git merge main (for feat/write-tools)
+          # resolve conflicts
+          git push origin $CONFLICT_TARGET
+          \`\`\`
+
+          See CLAUDE.md for branch strategy details."
