@@ -78,7 +78,7 @@ def _get_googleads_client() -> GoogleAdsClient:
     return client
 
 
-def get_googleads_service(serviceName: str) -> GoogleAdsServiceClient:
+def get_googleads_service(serviceName: str):
     return _get_googleads_client().get_service(
         serviceName, interceptors=[MCPHeaderInterceptor()]
     )
@@ -104,7 +104,6 @@ def format_output_row(row: proto.Message, attributes):
         attr: format_output_value(get_nested_attr(row, attr))
         for attr in attributes
     }
-
 
 
 def get_gaql_resources_filepath():

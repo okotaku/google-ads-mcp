@@ -52,7 +52,7 @@ def update_campaign_status(
 
     try:
         client = utils.get_googleads_client()
-        campaign_service = client.get_service("CampaignService")
+        campaign_service = utils.get_googleads_service("CampaignService")
         campaign_operation = client.get_type("CampaignOperation")
 
         campaign = campaign_operation.update
@@ -92,7 +92,7 @@ def update_ad_group_status(
 
     try:
         client = utils.get_googleads_client()
-        ad_group_service = client.get_service("AdGroupService")
+        ad_group_service = utils.get_googleads_service("AdGroupService")
         ad_group_operation = client.get_type("AdGroupOperation")
 
         ad_group = ad_group_operation.update
@@ -134,7 +134,7 @@ def update_ad_status(
 
     try:
         client = utils.get_googleads_client()
-        ad_group_ad_service = client.get_service("AdGroupAdService")
+        ad_group_ad_service = utils.get_googleads_service("AdGroupAdService")
         ad_group_ad_operation = client.get_type("AdGroupAdOperation")
 
         ad_group_ad = ad_group_ad_operation.update
@@ -176,7 +176,7 @@ def update_campaign_budget(
 
     try:
         client = utils.get_googleads_client()
-        budget_service = client.get_service("CampaignBudgetService")
+        budget_service = utils.get_googleads_service("CampaignBudgetService")
         budget_operation = client.get_type("CampaignBudgetOperation")
 
         budget = budget_operation.update
@@ -228,7 +228,7 @@ def update_bidding_strategy(
 
     try:
         client = utils.get_googleads_client()
-        campaign_service = client.get_service("CampaignService")
+        campaign_service = utils.get_googleads_service("CampaignService")
         campaign_operation = client.get_type("CampaignOperation")
 
         campaign = campaign_operation.update
@@ -288,7 +288,7 @@ def add_keywords(
     """
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
-    ad_group_criterion_service = client.get_service("AdGroupCriterionService")
+    ad_group_criterion_service = utils.get_googleads_service("AdGroupCriterionService")
 
     operations = []
     for i, kw in enumerate(keywords):
@@ -334,7 +334,7 @@ def add_negative_keywords(
     """
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
-    campaign_criterion_service = client.get_service(
+    campaign_criterion_service = utils.get_googleads_service(
         "CampaignCriterionService"
     )
 
@@ -405,7 +405,7 @@ def create_campaign(
     try:
         client = utils.get_googleads_client()
 
-        budget_service = client.get_service("CampaignBudgetService")
+        budget_service = utils.get_googleads_service("CampaignBudgetService")
         budget_operation = client.get_type("CampaignBudgetOperation")
         budget = budget_operation.create
         budget.name = f"{name} Budget"
@@ -419,7 +419,7 @@ def create_campaign(
         )
         budget_resource_name = budget_response.results[0].resource_name
 
-        campaign_service = client.get_service("CampaignService")
+        campaign_service = utils.get_googleads_service("CampaignService")
         campaign_operation = client.get_type("CampaignOperation")
         campaign = campaign_operation.create
         campaign.name = name
@@ -463,8 +463,8 @@ def create_ad_group(
 
     try:
         client = utils.get_googleads_client()
-        campaign_service = client.get_service("CampaignService")
-        ad_group_service = client.get_service("AdGroupService")
+        campaign_service = utils.get_googleads_service("CampaignService")
+        ad_group_service = utils.get_googleads_service("AdGroupService")
         ad_group_operation = client.get_type("AdGroupOperation")
 
         ad_group = ad_group_operation.create
@@ -506,7 +506,7 @@ def update_ad_group_bid(
 
     try:
         client = utils.get_googleads_client()
-        ad_group_service = client.get_service("AdGroupService")
+        ad_group_service = utils.get_googleads_service("AdGroupService")
         ad_group_operation = client.get_type("AdGroupOperation")
 
         ad_group = ad_group_operation.update
