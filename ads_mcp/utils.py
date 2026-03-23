@@ -41,13 +41,26 @@ _READ_ONLY_ADS_SCOPE = "https://www.googleapis.com/auth/adwords"
 
 
 def _create_credentials() -> google.auth.credentials.Credentials:
-    """Returns Application Default Credentials with read-only scope."""
+    """Returns OAuth credentials from YAML file or Application Default Credentials."""
+    credentials_path = os.environ.get("GOOGLE_ADS_CREDENTIALS")
+    if credentials_path and os.path.isfile(credentials_path):
+        client = GoogleAdsClient.load_from_storage(credentials_path)
+        return client.credentials
     credentials, _ = google.auth.default(scopes=[_READ_ONLY_ADS_SCOPE])
     return credentials
 
 
 def _get_developer_token() -> str:
-    """Returns the developer token from the environment variable GOOGLE_ADS_DEVELOPER_TOKEN."""
+    """Returns the developer token from YAML file or environment variable."""
+    credentials_path = os.environ.get("GOOGLE_ADS_CREDENTIALS")
+    if credentials_path and os.path.isfile(credentials_path):
+        import yaml
+
+        with open(credentials_path) as f:
+            config = yaml.safe_load(f)
+        token = config.get("developer_token")
+        if token:
+            return token
     dev_token = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN")
     if dev_token is None:
         raise ValueError(
@@ -57,11 +70,27 @@ def _get_developer_token() -> str:
 
 
 def _get_login_customer_id() -> str | None:
-    """Returns login customer id, if set, from the environment variable GOOGLE_ADS_LOGIN_CUSTOMER_ID."""
+    """Returns login customer id from YAML file or environment variable."""
+    credentials_path = os.environ.get("GOOGLE_ADS_CREDENTIALS")
+    if credentials_path and os.path.isfile(credentials_path):
+        import yaml
+
+        with open(credentials_path) as f:
+            config = yaml.safe_load(f)
+        login_id = config.get("login_customer_id")
+        if login_id:
+            return str(login_id)
     return os.environ.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
 
 
 def _get_googleads_client() -> GoogleAdsClient:
+    # If GOOGLE_ADS_CREDENTIALS points to a valid YAML file, load everything
+    # from it (refresh_token, client_id, client_secret, developer_token, etc.)
+    # This avoids dependency on Application Default Credentials (ADC).
+    credentials_path = os.environ.get("GOOGLE_ADS_CREDENTIALS")
+    if credentials_path and os.path.isfile(credentials_path):
+        return GoogleAdsClient.load_from_storage(credentials_path)
+
     args = {
         "credentials": _create_credentials(),
         "developer_token": _get_developer_token(),
