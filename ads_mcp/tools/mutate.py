@@ -69,7 +69,9 @@ def update_campaign_status(
         response = campaign_service.mutate_campaigns(
             customer_id=customer_id, operations=[campaign_operation]
         )
-        return f"Updated campaign {response.results[0].resource_name} to {status}"
+        return (
+            f"Updated campaign {response.results[0].resource_name} to {status}"
+        )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
 
@@ -109,7 +111,9 @@ def update_ad_group_status(
         response = ad_group_service.mutate_ad_groups(
             customer_id=customer_id, operations=[ad_group_operation]
         )
-        return f"Updated ad group {response.results[0].resource_name} to {status}"
+        return (
+            f"Updated ad group {response.results[0].resource_name} to {status}"
+        )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
 
@@ -256,9 +260,7 @@ def update_bidding_strategy(
             )
             mask_path = "maximize_conversions"
         elif strategy_type == "MAXIMIZE_CONVERSION_VALUE":
-            campaign.maximize_conversion_value.target_roas = (
-                target_roas or 0
-            )
+            campaign.maximize_conversion_value.target_roas = target_roas or 0
             mask_path = "maximize_conversion_value"
 
         campaign_operation.update_mask = field_mask_pb2.FieldMask(
@@ -288,7 +290,9 @@ def add_keywords(
     """
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
-    ad_group_criterion_service = utils.get_googleads_service("AdGroupCriterionService")
+    ad_group_criterion_service = utils.get_googleads_service(
+        "AdGroupCriterionService"
+    )
 
     operations = []
     for i, kw in enumerate(keywords):
@@ -423,9 +427,7 @@ def create_campaign(
         campaign_operation = client.get_type("CampaignOperation")
         campaign = campaign_operation.create
         campaign.name = name
-        campaign.status = (
-            client.enums.CampaignStatusEnum.CampaignStatus.PAUSED
-        )
+        campaign.status = client.enums.CampaignStatusEnum.CampaignStatus.PAUSED
         campaign.advertising_channel_type = getattr(
             client.enums.AdvertisingChannelTypeEnum.AdvertisingChannelType,
             advertising_channel_type,
@@ -472,9 +474,7 @@ def create_ad_group(
         ad_group.campaign = campaign_service.campaign_path(
             customer_id, campaign_id
         )
-        ad_group.status = (
-            client.enums.AdGroupStatusEnum.AdGroupStatus.PAUSED
-        )
+        ad_group.status = client.enums.AdGroupStatusEnum.AdGroupStatus.PAUSED
         ad_group.cpc_bid_micros = cpc_bid_micros
 
         response = ad_group_service.mutate_ad_groups(
