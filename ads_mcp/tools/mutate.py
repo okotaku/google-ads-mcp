@@ -489,6 +489,86 @@ def create_ad_group(
 
 
 @mcp.tool()
+def update_ad_final_url(
+    customer_id: str,
+    ad_id: str,
+    final_url: str,
+) -> str:
+    """Update an ad's final URL.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        ad_id: The ad ID to update.
+        final_url: New final URL (e.g., "https://example.com/landing").
+    """
+    if not final_url:
+        return "Error: final_url must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        ad_service = utils.get_googleads_service("AdService")
+        ad_operation = client.get_type("AdOperation")
+
+        ad = ad_operation.update
+        ad.resource_name = ad_service.ad_path(customer_id, ad_id)
+        ad.final_urls.append(final_url)
+        ad_operation.update_mask = field_mask_pb2.FieldMask(
+            paths=["final_urls"]
+        )
+
+        response = ad_service.mutate_ads(
+            customer_id=customer_id, operations=[ad_operation]
+        )
+        return (
+            f"Updated ad {response.results[0].resource_name} "
+            f"final URL to {final_url}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+
+
+@mcp.tool()
+def update_asset_group_final_url(
+    customer_id: str,
+    asset_group_id: str,
+    final_url: str,
+) -> str:
+    """Update a Performance Max asset group's final URL.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        asset_group_id: The asset group ID to update.
+        final_url: New final URL (e.g., "https://example.com/landing").
+    """
+    if not final_url:
+        return "Error: final_url must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        asset_group_service = utils.get_googleads_service("AssetGroupService")
+        asset_group_operation = client.get_type("AssetGroupOperation")
+
+        asset_group = asset_group_operation.update
+        asset_group.resource_name = asset_group_service.asset_group_path(
+            customer_id, asset_group_id
+        )
+        asset_group.final_urls.append(final_url)
+        asset_group_operation.update_mask = field_mask_pb2.FieldMask(
+            paths=["final_urls"]
+        )
+
+        response = asset_group_service.mutate_asset_groups(
+            customer_id=customer_id, operations=[asset_group_operation]
+        )
+        return (
+            f"Updated asset group {response.results[0].resource_name} "
+            f"final URL to {final_url}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+
+
+@mcp.tool()
 def update_ad_group_bid(
     customer_id: str,
     ad_group_id: str,
