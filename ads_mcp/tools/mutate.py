@@ -50,6 +50,9 @@ def update_campaign_status(
     if err := _validate_status(status):
         return err
 
+    # Proto-plus enum integer values: ENABLED=2, PAUSED=3
+    _CAMPAIGN_STATUS = {"ENABLED": 2, "PAUSED": 3}
+
     try:
         client = utils.get_googleads_client()
         campaign_service = utils.get_googleads_service("CampaignService")
@@ -59,8 +62,7 @@ def update_campaign_status(
         campaign.resource_name = campaign_service.campaign_path(
             customer_id, campaign_id
         )
-        status_enum = client.enums.CampaignStatusEnum.CampaignStatus
-        campaign.status = status_enum.ENABLED if status == "ENABLED" else status_enum.PAUSED
+        campaign.status = _CAMPAIGN_STATUS[status]
         campaign_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["status"]
         )
@@ -73,6 +75,8 @@ def update_campaign_status(
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
 
 
 @mcp.tool()
@@ -88,6 +92,9 @@ def update_ad_group_status(
         ad_group_id: The ad group ID to update.
         status: New status — must be "ENABLED" or "PAUSED".
     """
+    # Proto-plus enum integer values: ENABLED=2, PAUSED=3
+    _AD_GROUP_STATUS = {"ENABLED": 2, "PAUSED": 3}
+
     if err := _validate_status(status):
         return err
 
@@ -100,8 +107,7 @@ def update_ad_group_status(
         ad_group.resource_name = ad_group_service.ad_group_path(
             customer_id, ad_group_id
         )
-        status_enum = client.enums.AdGroupStatusEnum.AdGroupStatus
-        ad_group.status = status_enum.ENABLED if status == "ENABLED" else status_enum.PAUSED
+        ad_group.status = _AD_GROUP_STATUS[status]
         ad_group_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["status"]
         )
@@ -114,6 +120,8 @@ def update_ad_group_status(
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
 
 
 @mcp.tool()
@@ -131,6 +139,9 @@ def update_ad_status(
         ad_id: The ad ID to update.
         status: New status — must be "ENABLED" or "PAUSED".
     """
+    # Proto-plus enum integer values: ENABLED=2, PAUSED=3
+    _AD_STATUS = {"ENABLED": 2, "PAUSED": 3}
+
     if err := _validate_status(status):
         return err
 
@@ -143,8 +154,7 @@ def update_ad_status(
         ad_group_ad.resource_name = ad_group_ad_service.ad_group_ad_path(
             customer_id, ad_group_id, ad_id
         )
-        status_enum = client.enums.AdGroupAdStatusEnum.AdGroupAdStatus
-        ad_group_ad.status = status_enum.ENABLED if status == "ENABLED" else status_enum.PAUSED
+        ad_group_ad.status = _AD_STATUS[status]
         ad_group_ad_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["status"]
         )
@@ -155,6 +165,8 @@ def update_ad_status(
         return f"Updated ad {response.results[0].resource_name} to {status}"
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
 
 
 @mcp.tool()
