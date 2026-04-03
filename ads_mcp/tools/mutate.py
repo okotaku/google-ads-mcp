@@ -59,9 +59,8 @@ def update_campaign_status(
         campaign.resource_name = campaign_service.campaign_path(
             customer_id, campaign_id
         )
-        campaign.status = getattr(
-            client.enums.CampaignStatusEnum.CampaignStatus, status
-        )
+        status_enum = client.enums.CampaignStatusEnum.CampaignStatus
+        campaign.status = status_enum.ENABLED if status == "ENABLED" else status_enum.PAUSED
         campaign_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["status"]
         )
@@ -101,9 +100,8 @@ def update_ad_group_status(
         ad_group.resource_name = ad_group_service.ad_group_path(
             customer_id, ad_group_id
         )
-        ad_group.status = getattr(
-            client.enums.AdGroupStatusEnum.AdGroupStatus, status
-        )
+        status_enum = client.enums.AdGroupStatusEnum.AdGroupStatus
+        ad_group.status = status_enum.ENABLED if status == "ENABLED" else status_enum.PAUSED
         ad_group_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["status"]
         )
@@ -145,9 +143,8 @@ def update_ad_status(
         ad_group_ad.resource_name = ad_group_ad_service.ad_group_ad_path(
             customer_id, ad_group_id, ad_id
         )
-        ad_group_ad.status = getattr(
-            client.enums.AdGroupAdStatusEnum.AdGroupAdStatus, status
-        )
+        status_enum = client.enums.AdGroupAdStatusEnum.AdGroupAdStatus
+        ad_group_ad.status = status_enum.ENABLED if status == "ENABLED" else status_enum.PAUSED
         ad_group_ad_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["status"]
         )
