@@ -578,6 +578,55 @@ def update_asset_group_final_url(
 
 
 @mcp.tool()
+def update_campaign_conversion_goal(
+    customer_id: str,
+    campaign_id: str,
+    category: str,
+    origin: str,
+    biddable: bool,
+) -> str:
+    """Update a campaign conversion goal's biddable setting.
+
+    Controls whether the campaign's automated bidding strategy optimizes
+    for this conversion goal.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID.
+        category: Conversion goal category (e.g., "SIGNUP", "PURCHASE", "SUBMIT_LEAD_FORM").
+        origin: Conversion goal origin (e.g., "WEBSITE", "GOOGLE_HOSTED").
+        biddable: Whether the bidding strategy should optimize for this goal.
+    """
+    try:
+        client = utils.get_googleads_client()
+        service = utils.get_googleads_service(
+            "CampaignConversionGoalService"
+        )
+        operation = client.get_type("CampaignConversionGoalOperation")
+
+        goal = operation.update
+        goal.resource_name = service.campaign_conversion_goal_path(
+            customer_id, campaign_id, category, origin
+        )
+        goal.biddable = biddable
+        operation.update_mask = field_mask_pb2.FieldMask(
+            paths=["biddable"]
+        )
+
+        response = service.mutate_campaign_conversion_goals(
+            customer_id=customer_id, operations=[operation]
+        )
+        return (
+            f"Updated {response.results[0].resource_name} "
+            f"biddable to {biddable}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
 def update_ad_group_bid(
     customer_id: str,
     ad_group_id: str,
