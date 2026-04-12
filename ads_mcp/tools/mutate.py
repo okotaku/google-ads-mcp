@@ -766,13 +766,15 @@ def set_ad_schedule(
             - "end_hour": 0-24 (24 means end of day)
             - "end_minute": "ZERO"|"FIFTEEN"|"THIRTY"|"FORTY_FIVE" (default: "ZERO")
     """
+    # Use a single client instance for all operations to avoid
+    # proto-plus type incompatibility between separate client instances.
     client = utils.get_googleads_client()
-    campaign_criterion_service = utils.get_googleads_service(
+    campaign_criterion_service = client.get_service(
         "CampaignCriterionService"
     )
 
     # Step 1: Remove existing ad schedules
-    ga_service = utils.get_googleads_service("GoogleAdsService")
+    ga_service = client.get_service("GoogleAdsService")
     query = (
         f"SELECT campaign_criterion.resource_name, "
         f"campaign_criterion.type "
