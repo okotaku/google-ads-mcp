@@ -14,8 +14,16 @@ to provide several
 ### Tools available
 
 - `search`: Retrieves information about the Google Ads account.
+- `get_resource_metadata`: Retrieves metadata about a Google Ads API resource type, for example "campaign". This is useful to understand the structure of the data and what fields are available for querying.
 - `list_accessible_customers`: Returns names of customers directly accessible
   by the user authenticating the call.
+
+### Resources available
+
+- `discovery-document`: Retrieve the Google Ads API discovery document. Provides the discovery document for the latest version of the Google Ads API, which describes the API surface, including resources, methods, and schemas. Host LLMs should access this resource to understand the structure of the Google Ads API and discover available features.
+- `metrics`: Retrieve information about the metrics available for reporting in the Google Ads API.
+- `segments`: Retrieve information about the segments available for reporting in the Google Ads API.
+- `release-notes`: Retrieve the release notes for the latest version of the Google Ads API
 
 ## Notes
 
@@ -41,6 +49,8 @@ Setup involves the following steps:
 
 Follow the instructions for [Obtaining a Developer Token](https://developers.google.com/google-ads/api/docs/get-started/dev-token).
 
+Make sure your developer token has at least [Explorer access](https://developers.google.com/google-ads/api/docs/api-policy/access-levels).
+
 Record 'YOUR_DEVELOPER_TOKEN', you will need this for the the 'Configure Gemini' step below
 
 ### Enable APIs in your project
@@ -51,7 +61,23 @@ to enable the following APIs in your Google Cloud project:
 * [Google Ads API](https://console.cloud.google.com/apis/library/googleads.googleapis.com)
 
 ### Configure Credentials
-#### Option 1: Configure credentials using Application Default Credentials
+#### Option 1: Using FastMCP OAuth Proxy
+
+The server supports FastMCP's [OAuth proxy](https://gofastmcp.com/servers/auth/oauth-proxy) feature for dynamic user authentication. This is useful when running the server as a web service.
+
+To enable it, set the following environment variables:
+
+- `GOOGLE_ADS_MCP_OAUTH_CLIENT_ID`: Your Google Cloud OAuth 2.0 Client ID.
+- `GOOGLE_ADS_MCP_OAUTH_CLIENT_SECRET`: Your Google Cloud OAuth 2.0 Client Secret.
+- `GOOGLE_ADS_MCP_BASE_URL`: (Optional) The base URL where the server is accessible (defaults to `http://localhost:8000`).
+
+Once this is enabled, you can authenticate to the API through your MCP client: for example, in Gemini CLI, the command `/mcp auth google-ads-mcp` triggers the authentication flow.
+
+When these variables are set, the server automatically switches to the `streamable-http` transport (SSE/HTTP) instead of stdio.
+
+You will need to run the server as a separate process and configure your MCP client to connect to the SSE endpoint (e.g., `http://localhost:8000/mcp`).
+
+#### Option 2: Configure credentials using Application Default Credentials
 
 Configure your [Application Default Credentials
 (ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc).
@@ -96,7 +122,7 @@ following message. You will need this for a later step!
 Credentials saved to file: [PATH_TO_CREDENTIALS_JSON]
 ```
 
-#### Option 2: Configure credentials using the Google Ads API Python client library.
+#### Option 3: Configure credentials using the Google Ads API Python client library.
 
 [Follow the instructions](https://developers.google.com/google-ads/api/docs/client-libs/python/)
 to setup and configure the Google Ads API Python client library
@@ -116,7 +142,26 @@ In the utils.py file, change get_googleads_client() to use the load_from_storage
     to the `mcpServers` list.
 
 
-- Option 1: the Application Default Credentials method
+- Option 1: Using FastMCP OAuth Proxy (Streamable HTTP)
+
+  You can run the server as a separate process and configure your MCP client to connect to the SSE endpoint (e.g., `http://localhost:8000/mcp`).
+  This also allows using FastMCP's [OAuth proxy](https://gofastmcp.com/servers/auth/oauth-proxy) feature for dynamic user authentication.
+
+    ```json
+    {
+      "mcpServers": {
+        "google-ads-mcp": {
+          "httpUrl":"http://localhost:8000/mcp",
+          "env": {
+            "GOOGLE_PROJECT_ID": "YOUR_PROJECT_ID",
+            "GOOGLE_ADS_DEVELOPER_TOKEN": "YOUR_DEVELOPER_TOKEN"                        
+          }
+        }
+      }
+    }
+    ```
+
+- Option 2: the Application Default Credentials method
 
     Replace `PATH_TO_CREDENTIALS_JSON` with the path you copied in the previous
     step.
@@ -149,7 +194,7 @@ In the utils.py file, change get_googleads_client() to use the load_from_storage
     }
     ```
 
-- Option 2: the Python client library method
+- Option 3: the Python client library method
 
     ```json
     {

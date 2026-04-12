@@ -41,11 +41,22 @@ _READ_ONLY_ADS_SCOPE = "https://www.googleapis.com/auth/adwords"
 
 
 def _create_credentials() -> google.auth.credentials.Credentials:
-    """Returns OAuth credentials from YAML file or Application Default Credentials."""
+    """Returns OAuth credentials from YAML file, FastMCP token, or Application Default Credentials."""
+    # 1. If GOOGLE_ADS_CREDENTIALS YAML file exists, use OAuth refresh_token flow.
     credentials_path = os.environ.get("GOOGLE_ADS_CREDENTIALS")
     if credentials_path and os.path.isfile(credentials_path):
         client = GoogleAdsClient.load_from_storage(credentials_path)
         return client.credentials
+
+    # 2. If FastMCP provides an access token, use it.
+    from fastmcp.server.dependencies import get_access_token
+    from google.oauth2.credentials import Credentials
+
+    token_obj = get_access_token()
+    if token_obj and token_obj.token:
+        return Credentials(token=token_obj.token)
+
+    # 3. Fall back to Application Default Credentials.
     credentials, _ = google.auth.default(scopes=[_READ_ONLY_ADS_SCOPE])
     return credentials
 
@@ -125,6 +136,10 @@ def get_googleads_client():
 def format_output_value(value: Any) -> Any:
     if isinstance(value, proto.Enum):
         return value.name
+    elif isinstance(value, proto.Message):
+        return proto.Message.to_dict(value)
+    elif hasattr(value, "__iter__") and not isinstance(value, (str, bytes)):
+        return [format_output_value(v) for v in value]
     else:
         return value
 
