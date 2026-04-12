@@ -664,10 +664,11 @@ def add_shared_set_negative_keywords(
         criterion.shared_set = (
             f"customers/{customer_id}/sharedSets/{shared_set_id}"
         )
+        # Proto-plus enum integer values: EXACT=2, PHRASE=3, BROAD=4
+        _MATCH_TYPE = {"EXACT": 2, "PHRASE": 3, "BROAD": 4}
+
         criterion.keyword.text = text
-        criterion.keyword.match_type = getattr(
-            client.enums.KeywordMatchTypeEnum.KeywordMatchType, match_type
-        )
+        criterion.keyword.match_type = _MATCH_TYPE[match_type]
         operations.append(operation)
 
     try:
