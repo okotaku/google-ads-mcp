@@ -627,6 +627,62 @@ def update_campaign_conversion_goal(
 
 
 @mcp.tool()
+def add_shared_set_negative_keywords(
+    customer_id: str,
+    shared_set_id: str,
+    keywords: list[dict],
+) -> str:
+    """Add negative keywords to a shared negative keyword list.
+
+    Shared sets are account-level negative keyword lists that can be linked
+    to multiple campaigns. Use the ``search`` tool with resource
+    ``shared_set`` (conditions: ``shared_set.type = 'NEGATIVE_KEYWORDS'``)
+    to find shared set IDs and names.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        shared_set_id: The shared set ID to add negative keywords to.
+        keywords: List of keyword dicts, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
+    """
+    valid_match_types = ("EXACT", "PHRASE", "BROAD")
+    client = utils.get_googleads_client()
+    shared_criterion_service = utils.get_googleads_service(
+        "SharedCriterionService"
+    )
+
+    operations = []
+    for i, kw in enumerate(keywords):
+        text = kw.get("text", "")
+        if not text:
+            return f"Error: keyword text must not be empty (index {i})"
+        match_type = kw.get("match_type", "BROAD")
+        if match_type not in valid_match_types:
+            return f"Error: match_type must be one of {valid_match_types}, got '{match_type}' (index {i})"
+
+        operation = client.get_type("SharedCriterionOperation")
+        criterion = operation.create
+        criterion.shared_set = (
+            f"customers/{customer_id}/sharedSets/{shared_set_id}"
+        )
+        criterion.keyword.text = text
+        criterion.keyword.match_type = getattr(
+            client.enums.KeywordMatchTypeEnum.KeywordMatchType, match_type
+        )
+        operations.append(operation)
+
+    try:
+        response = shared_criterion_service.mutate_shared_criteria(
+            customer_id=customer_id, operations=operations
+        )
+        return (
+            f"Added {len(response.results)} negative keyword(s) "
+            f"to shared set {shared_set_id}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+
+
+@mcp.tool()
 def update_ad_group_bid(
     customer_id: str,
     ad_group_id: str,
