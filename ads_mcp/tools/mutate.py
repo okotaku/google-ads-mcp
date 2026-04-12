@@ -737,10 +737,10 @@ _DAY_OF_WEEK = {
 
 # Minute of hour enum integer values
 _MINUTE_OF_HOUR = {
-    "ZERO": 0,
-    "FIFTEEN": 1,
-    "THIRTY": 2,
-    "FORTY_FIVE": 3,
+    "ZERO": 2,
+    "FIFTEEN": 3,
+    "THIRTY": 4,
+    "FORTY_FIVE": 5,
 }
 
 
