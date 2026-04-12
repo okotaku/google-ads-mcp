@@ -722,3 +722,122 @@ def update_ad_group_bid(
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
+
+
+# Day of week enum integer values
+_DAY_OF_WEEK = {
+    "MONDAY": 2,
+    "TUESDAY": 3,
+    "WEDNESDAY": 4,
+    "THURSDAY": 5,
+    "FRIDAY": 6,
+    "SATURDAY": 7,
+    "SUNDAY": 8,
+}
+
+# Minute of hour enum integer values
+_MINUTE_OF_HOUR = {
+    "ZERO": 0,
+    "FIFTEEN": 1,
+    "THIRTY": 2,
+    "FORTY_FIVE": 3,
+}
+
+
+@mcp.tool()
+def set_ad_schedule(
+    customer_id: str,
+    campaign_id: str,
+    schedules: list[dict],
+) -> str:
+    """Set ad schedules for a campaign. This replaces all existing ad schedules.
+
+    Each schedule defines a day and time window when ads should run.
+    To run ads Monday-Friday all day, pass 5 schedule entries (one per day)
+    with start_hour=0, end_hour=24.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID to set schedules for.
+        schedules: List of schedule dicts, each with:
+            - "day_of_week": "MONDAY"|"TUESDAY"|"WEDNESDAY"|"THURSDAY"|"FRIDAY"|"SATURDAY"|"SUNDAY"
+            - "start_hour": 0-23
+            - "start_minute": "ZERO"|"FIFTEEN"|"THIRTY"|"FORTY_FIVE" (default: "ZERO")
+            - "end_hour": 0-24 (24 means end of day)
+            - "end_minute": "ZERO"|"FIFTEEN"|"THIRTY"|"FORTY_FIVE" (default: "ZERO")
+    """
+    client = utils.get_googleads_client()
+    campaign_criterion_service = utils.get_googleads_service(
+        "CampaignCriterionService"
+    )
+
+    # Step 1: Remove existing ad schedules
+    ga_service = utils.get_googleads_service("GoogleAdsService")
+    query = (
+        f"SELECT campaign_criterion.resource_name, "
+        f"campaign_criterion.type "
+        f"FROM campaign_criterion "
+        f"WHERE campaign.id = {campaign_id} "
+        f"AND campaign_criterion.type = 'AD_SCHEDULE'"
+    )
+    try:
+        response = ga_service.search(customer_id=customer_id, query=query)
+        remove_operations = []
+        for row in response:
+            operation = client.get_type("CampaignCriterionOperation")
+            operation.remove = row.campaign_criterion.resource_name
+            remove_operations.append(operation)
+
+        if remove_operations:
+            campaign_criterion_service.mutate_campaign_criteria(
+                customer_id=customer_id, operations=remove_operations
+            )
+    except GoogleAdsException as ex:
+        return f"Error removing existing schedules: {_format_google_ads_error(ex)}"
+
+    # Step 2: Add new schedules
+    if not schedules:
+        return "Removed all ad schedules (ads will run all days/times)"
+
+    create_operations = []
+    for i, sched in enumerate(schedules):
+        day = sched.get("day_of_week", "")
+        if day not in _DAY_OF_WEEK:
+            return (
+                f"Error: day_of_week must be one of "
+                f"{list(_DAY_OF_WEEK.keys())}, got '{day}' (index {i})"
+            )
+
+        start_hour = sched.get("start_hour", 0)
+        end_hour = sched.get("end_hour", 24)
+        start_minute = sched.get("start_minute", "ZERO")
+        end_minute = sched.get("end_minute", "ZERO")
+
+        if start_minute not in _MINUTE_OF_HOUR:
+            return f"Error: invalid start_minute '{start_minute}' (index {i})"
+        if end_minute not in _MINUTE_OF_HOUR:
+            return f"Error: invalid end_minute '{end_minute}' (index {i})"
+
+        operation = client.get_type("CampaignCriterionOperation")
+        criterion = operation.create
+        criterion.campaign = campaign_criterion_service.campaign_path(
+            customer_id, campaign_id
+        )
+        criterion.ad_schedule.day_of_week = _DAY_OF_WEEK[day]
+        criterion.ad_schedule.start_hour = start_hour
+        criterion.ad_schedule.start_minute = _MINUTE_OF_HOUR[start_minute]
+        criterion.ad_schedule.end_hour = end_hour
+        criterion.ad_schedule.end_minute = _MINUTE_OF_HOUR[end_minute]
+        create_operations.append(operation)
+
+    try:
+        response = campaign_criterion_service.mutate_campaign_criteria(
+            customer_id=customer_id, operations=create_operations
+        )
+        days = [s["day_of_week"] for s in schedules]
+        return (
+            f"Set {len(response.results)} ad schedule(s) for campaign "
+            f"{campaign_id}: {', '.join(days)}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
