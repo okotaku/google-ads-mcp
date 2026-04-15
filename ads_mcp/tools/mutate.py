@@ -14,6 +14,8 @@
 
 """Tools for mutating Google Ads resources via the MCP server."""
 
+import json
+
 from pydantic import BaseModel
 
 from google.ads.googleads.errors import GoogleAdsException
@@ -21,6 +23,17 @@ from google.protobuf import field_mask_pb2
 
 from ads_mcp.coordinator import mcp
 import ads_mcp.utils as utils
+
+
+def _ensure_list(value: object) -> list:
+    """Ensure value is a list, parsing JSON string if needed.
+
+    Some MCP clients serialize list parameters as JSON strings.
+    This function transparently handles both cases.
+    """
+    if isinstance(value, str):
+        return json.loads(value)
+    return value
 
 
 class KeywordInput(BaseModel):
@@ -316,6 +329,10 @@ def add_keywords(
         ad_group_id: The ad group ID to add keywords to.
         keywords: List of keyword objects, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
     """
+    keywords = [
+        KeywordInput(**kw) if isinstance(kw, dict) else kw
+        for kw in _ensure_list(keywords)
+    ]
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
     ad_group_criterion_service = utils.get_googleads_service(
@@ -363,6 +380,10 @@ def add_negative_keywords(
         campaign_id: The campaign ID to add negative keywords to.
         keywords: List of keyword objects, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
     """
+    keywords = [
+        KeywordInput(**kw) if isinstance(kw, dict) else kw
+        for kw in _ensure_list(keywords)
+    ]
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
     campaign_criterion_service = utils.get_googleads_service(
@@ -674,6 +695,10 @@ def add_shared_set_negative_keywords(
         shared_set_id: The shared set ID to add negative keywords to.
         keywords: List of keyword objects, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
     """
+    keywords = [
+        KeywordInput(**kw) if isinstance(kw, dict) else kw
+        for kw in _ensure_list(keywords)
+    ]
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
     shared_criterion_service = utils.get_googleads_service(
@@ -867,6 +892,10 @@ def set_ad_schedule(
             - "end_hour": 0-24 (24 means end of day)
             - "end_minute": "ZERO"|"FIFTEEN"|"THIRTY"|"FORTY_FIVE" (default: "ZERO")
     """
+    schedules = [
+        AdScheduleInput(**s) if isinstance(s, dict) else s
+        for s in _ensure_list(schedules)
+    ]
     # Use a single client instance for all operations to avoid
     # proto-plus type incompatibility between separate client instances.
     client = utils.get_googleads_client()
