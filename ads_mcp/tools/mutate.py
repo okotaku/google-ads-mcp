@@ -599,9 +599,7 @@ def update_campaign_conversion_goal(
     """
     try:
         client = utils.get_googleads_client()
-        service = utils.get_googleads_service(
-            "CampaignConversionGoalService"
-        )
+        service = utils.get_googleads_service("CampaignConversionGoalService")
         operation = client.get_type("CampaignConversionGoalOperation")
 
         goal = operation.update
@@ -609,9 +607,7 @@ def update_campaign_conversion_goal(
             customer_id, campaign_id, category, origin
         )
         goal.biddable = biddable
-        operation.update_mask = field_mask_pb2.FieldMask(
-            paths=["biddable"]
-        )
+        operation.update_mask = field_mask_pb2.FieldMask(paths=["biddable"])
 
         response = service.mutate_campaign_conversion_goals(
             customer_id=customer_id, operations=[operation]
@@ -681,6 +677,79 @@ def add_shared_set_negative_keywords(
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
+
+
+@mcp.tool()
+def create_responsive_search_ad(
+    customer_id: str,
+    ad_group_id: str,
+    headlines: list[str],
+    descriptions: list[str],
+    final_url: str,
+    path1: str = "",
+    path2: str = "",
+) -> str:
+    """Create a new responsive search ad (RSA) in PAUSED state.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        ad_group_id: The ad group ID to create the ad in.
+        headlines: List of headline texts (min 3, max 15). Each headline max 30 characters.
+        descriptions: List of description texts (min 2, max 4). Each description max 90 characters.
+        final_url: The landing page URL (e.g., "https://example.com/landing").
+        path1: Optional display URL path 1 (max 15 characters, e.g., "products").
+        path2: Optional display URL path 2 (max 15 characters, e.g., "shoes"). Only used if path1 is set.
+    """
+    if len(headlines) < 3 or len(headlines) > 15:
+        return f"Error: headlines must have 3-15 items, got {len(headlines)}"
+    if len(descriptions) < 2 or len(descriptions) > 4:
+        return (
+            f"Error: descriptions must have 2-4 items, got {len(descriptions)}"
+        )
+    if not final_url:
+        return "Error: final_url must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        ad_group_service = utils.get_googleads_service("AdGroupService")
+        ad_group_ad_service = utils.get_googleads_service("AdGroupAdService")
+        operation = client.get_type("AdGroupAdOperation")
+
+        ad_group_ad = operation.create
+        ad_group_ad.ad_group = ad_group_service.ad_group_path(
+            customer_id, ad_group_id
+        )
+        ad_group_ad.status = 3  # PAUSED
+
+        rsa = ad_group_ad.ad.responsive_search_ad
+        for text in headlines:
+            headline = client.get_type("AdTextAsset")
+            headline.text = text
+            rsa.headlines.append(headline)
+
+        for text in descriptions:
+            description = client.get_type("AdTextAsset")
+            description.text = text
+            rsa.descriptions.append(description)
+
+        ad_group_ad.ad.final_urls.append(final_url)
+
+        if path1:
+            rsa.path1 = path1
+        if path1 and path2:
+            rsa.path2 = path2
+
+        response = ad_group_ad_service.mutate_ad_group_ads(
+            customer_id=customer_id, operations=[operation]
+        )
+        return (
+            f"Created responsive search ad {response.results[0].resource_name} "
+            f"(PAUSED, {len(headlines)} headlines, {len(descriptions)} descriptions)"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
 
 
 @mcp.tool()
