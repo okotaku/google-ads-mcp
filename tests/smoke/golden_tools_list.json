@@ -222,7 +222,7 @@
           "tags": []
         }
       },
-      "description": "Create a new campaign in PAUSED state with a new daily budget.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    name: Campaign name.\n    budget_amount_micros: Daily budget in micros (e.g., 50000000 = $50/day). Must be positive.\n    advertising_channel_type: Channel type \u2014 \"SEARCH\", \"DISPLAY\", \"SHOPPING\", \"VIDEO\", etc. Defaults to \"SEARCH\".",
+      "description": "Create a new campaign in PAUSED state with a new daily budget.\n\nThe campaign is created with MAXIMIZE_CONVERSIONS bidding (uncapped)\nand standard network settings (Google Search + Search Partners).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    name: Campaign name.\n    budget_amount_micros: Daily budget in micros (e.g., 50000000 = $50/day). Must be positive.\n    advertising_channel_type: Channel type \u2014 \"SEARCH\", \"DISPLAY\", \"SHOPPING\", \"VIDEO\", etc. Defaults to \"SEARCH\".",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

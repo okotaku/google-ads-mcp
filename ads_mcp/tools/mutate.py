@@ -398,18 +398,19 @@ def add_negative_keywords(
         return _format_google_ads_error(ex)
 
 
-_VALID_CHANNEL_TYPES = (
-    "SEARCH",
-    "DISPLAY",
-    "SHOPPING",
-    "VIDEO",
-    "MULTI_CHANNEL",
-    "LOCAL",
-    "SMART",
-    "PERFORMANCE_MAX",
-    "DEMAND_GEN",
-    "TRAVEL",
-)
+# Proto-plus enum integer values for advertising channel types
+_CHANNEL_TYPE = {
+    "SEARCH": 2,
+    "DISPLAY": 3,
+    "SHOPPING": 4,
+    "VIDEO": 6,
+    "MULTI_CHANNEL": 7,
+    "LOCAL": 8,
+    "SMART": 9,
+    "PERFORMANCE_MAX": 10,
+    "DEMAND_GEN": 13,
+    "TRAVEL": 15,
+}
 
 
 @mcp.tool()
@@ -421,6 +422,9 @@ def create_campaign(
 ) -> str:
     """Create a new campaign in PAUSED state with a new daily budget.
 
+    The campaign is created with MAXIMIZE_CONVERSIONS bidding (uncapped)
+    and standard network settings (Google Search + Search Partners).
+
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         name: Campaign name.
@@ -428,44 +432,57 @@ def create_campaign(
         advertising_channel_type: Channel type — "SEARCH", "DISPLAY", "SHOPPING", "VIDEO", etc. Defaults to "SEARCH".
     """
     if budget_amount_micros <= 0:
-        return f"Error: budget_amount_micros must be positive, got {budget_amount_micros}"
-    if advertising_channel_type not in _VALID_CHANNEL_TYPES:
-        return f"Error: advertising_channel_type must be one of {_VALID_CHANNEL_TYPES}, got '{advertising_channel_type}'"
+        return (
+            f"Error: budget_amount_micros must be positive, "
+            f"got {budget_amount_micros}"
+        )
+    if advertising_channel_type not in _CHANNEL_TYPE:
+        return (
+            f"Error: advertising_channel_type must be one of "
+            f"{list(_CHANNEL_TYPE.keys())}, "
+            f"got '{advertising_channel_type}'"
+        )
 
     try:
         client = utils.get_googleads_client()
 
+        # Create a non-shared budget
         budget_service = utils.get_googleads_service("CampaignBudgetService")
         budget_operation = client.get_type("CampaignBudgetOperation")
         budget = budget_operation.create
         budget.name = f"{name} Budget"
         budget.amount_micros = budget_amount_micros
-        budget.delivery_method = (
-            client.enums.BudgetDeliveryMethodEnum.BudgetDeliveryMethod.STANDARD
-        )
+        budget.delivery_method = 2  # STANDARD
+        budget.explicitly_shared = False
 
         budget_response = budget_service.mutate_campaign_budgets(
             customer_id=customer_id, operations=[budget_operation]
         )
         budget_resource_name = budget_response.results[0].resource_name
 
+        # Create campaign
         campaign_service = utils.get_googleads_service("CampaignService")
         campaign_operation = client.get_type("CampaignOperation")
         campaign = campaign_operation.create
         campaign.name = name
-        campaign.status = client.enums.CampaignStatusEnum.CampaignStatus.PAUSED
-        campaign.advertising_channel_type = getattr(
-            client.enums.AdvertisingChannelTypeEnum.AdvertisingChannelType,
-            advertising_channel_type,
-        )
+        campaign.status = 3  # PAUSED
+        campaign.advertising_channel_type = _CHANNEL_TYPE[
+            advertising_channel_type
+        ]
         campaign.campaign_budget = budget_resource_name
+        campaign.maximize_conversions.target_cpa_micros = 0
+        campaign.network_settings.target_google_search = True
+        campaign.network_settings.target_search_network = True
+        campaign.network_settings.target_content_network = False
+        campaign.contains_eu_political_advertising = 3  # NO
 
         response = campaign_service.mutate_campaigns(
             customer_id=customer_id, operations=[campaign_operation]
         )
         return (
             f"Created campaign {response.results[0].resource_name} "
-            f"(PAUSED, budget: {budget_amount_micros / 1_000_000:.2f}/day)"
+            f"(PAUSED, budget: "
+            f"{budget_amount_micros / 1_000_000:.2f}/day)"
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
@@ -500,7 +517,7 @@ def create_ad_group(
         ad_group.campaign = campaign_service.campaign_path(
             customer_id, campaign_id
         )
-        ad_group.status = client.enums.AdGroupStatusEnum.AdGroupStatus.PAUSED
+        ad_group.status = 3  # PAUSED
         ad_group.cpc_bid_micros = cpc_bid_micros
 
         response = ad_group_service.mutate_ad_groups(
