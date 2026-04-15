@@ -358,6 +358,47 @@
           "tags": []
         }
       },
+      "description": "Link a shared set (e.g., negative keyword list) to a campaign.\n\nUse the ``search`` tool with resource ``shared_set`` to find\nshared set IDs and names.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to link the shared set to.\n    shared_set_id: The shared set ID to link.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "campaign_id": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "string"
+          },
+          "shared_set_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id",
+          "campaign_id",
+          "shared_set_id"
+        ],
+        "type": "object"
+      },
+      "name": "link_shared_set_to_campaign",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      }
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
       "description": "Returns ids of customers directly accessible by the user authenticating the call.",
       "inputSchema": {
         "additionalProperties": false,

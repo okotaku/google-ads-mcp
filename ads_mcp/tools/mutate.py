@@ -735,6 +735,49 @@ def add_shared_set_negative_keywords(
 
 
 @mcp.tool()
+def link_shared_set_to_campaign(
+    customer_id: str,
+    campaign_id: str,
+    shared_set_id: str,
+) -> str:
+    """Link a shared set (e.g., negative keyword list) to a campaign.
+
+    Use the ``search`` tool with resource ``shared_set`` to find
+    shared set IDs and names.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID to link the shared set to.
+        shared_set_id: The shared set ID to link.
+    """
+    try:
+        client = utils.get_googleads_client()
+        service = utils.get_googleads_service("CampaignSharedSetService")
+        operation = client.get_type("CampaignSharedSetOperation")
+
+        campaign_shared_set = operation.create
+        campaign_shared_set.campaign = (
+            f"customers/{customer_id}/campaigns/{campaign_id}"
+        )
+        campaign_shared_set.shared_set = (
+            f"customers/{customer_id}/sharedSets/{shared_set_id}"
+        )
+
+        response = service.mutate_campaign_shared_sets(
+            customer_id=customer_id, operations=[operation]
+        )
+        return (
+            f"Linked shared set {shared_set_id} to campaign "
+            f"{campaign_id}: "
+            f"{response.results[0].resource_name}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
 def create_responsive_search_ad(
     customer_id: str,
     ad_group_id: str,
