@@ -267,10 +267,10 @@ def update_bidding_strategy(
             campaign.maximize_conversions.target_cpa_micros = (
                 target_value_micros or 0
             )
-            mask_path = "maximize_conversions"
+            mask_path = "maximize_conversions.target_cpa_micros"
         elif strategy_type == "MAXIMIZE_CONVERSION_VALUE":
             campaign.maximize_conversion_value.target_roas = target_roas or 0
-            mask_path = "maximize_conversion_value"
+            mask_path = "maximize_conversion_value.target_roas"
 
         campaign_operation.update_mask = field_mask_pb2.FieldMask(
             paths=[mask_path]
