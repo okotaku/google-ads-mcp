@@ -352,10 +352,9 @@ def add_keywords(
             customer_id, ad_group_id
         )
         criterion.keyword.text = kw.text
-        criterion.keyword.match_type = getattr(
-            client.enums.KeywordMatchTypeEnum.KeywordMatchType,
-            kw.match_type,
-        )
+        # Proto-plus enum integer values: EXACT=2, PHRASE=3, BROAD=4
+        _MATCH_TYPE = {"EXACT": 2, "PHRASE": 3, "BROAD": 4}
+        criterion.keyword.match_type = _MATCH_TYPE[kw.match_type]
         operations.append(operation)
 
     try:
@@ -404,10 +403,9 @@ def add_negative_keywords(
         )
         criterion.negative = True
         criterion.keyword.text = kw.text
-        criterion.keyword.match_type = getattr(
-            client.enums.KeywordMatchTypeEnum.KeywordMatchType,
-            kw.match_type,
-        )
+        # Proto-plus enum integer values: EXACT=2, PHRASE=3, BROAD=4
+        _MATCH_TYPE = {"EXACT": 2, "PHRASE": 3, "BROAD": 4}
+        criterion.keyword.match_type = _MATCH_TYPE[kw.match_type]
         operations.append(operation)
 
     try:
