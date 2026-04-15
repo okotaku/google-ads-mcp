@@ -14,11 +14,30 @@
 
 """Tools for mutating Google Ads resources via the MCP server."""
 
+from pydantic import BaseModel
+
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import field_mask_pb2
 
 from ads_mcp.coordinator import mcp
 import ads_mcp.utils as utils
+
+
+class KeywordInput(BaseModel):
+    """A keyword with text and match type."""
+
+    text: str
+    match_type: str = "BROAD"
+
+
+class AdScheduleInput(BaseModel):
+    """An ad schedule entry defining a day and time window."""
+
+    day_of_week: str
+    start_hour: int = 0
+    start_minute: str = "ZERO"
+    end_hour: int = 24
+    end_minute: str = "ZERO"
 
 
 def _validate_status(status: str) -> str | None:
@@ -288,14 +307,14 @@ def update_bidding_strategy(
 def add_keywords(
     customer_id: str,
     ad_group_id: str,
-    keywords: list[dict],
+    keywords: list[KeywordInput],
 ) -> str:
     """Add keywords to an ad group.
 
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         ad_group_id: The ad group ID to add keywords to.
-        keywords: List of keyword dicts, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
+        keywords: List of keyword objects, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
     """
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
@@ -305,21 +324,20 @@ def add_keywords(
 
     operations = []
     for i, kw in enumerate(keywords):
-        text = kw.get("text", "")
-        if not text:
+        if not kw.text:
             return f"Error: keyword text must not be empty (index {i})"
-        match_type = kw.get("match_type", "BROAD")
-        if match_type not in valid_match_types:
-            return f"Error: match_type must be one of {valid_match_types}, got '{match_type}' (index {i})"
+        if kw.match_type not in valid_match_types:
+            return f"Error: match_type must be one of {valid_match_types}, got '{kw.match_type}' (index {i})"
 
         operation = client.get_type("AdGroupCriterionOperation")
         criterion = operation.create
         criterion.ad_group = ad_group_criterion_service.ad_group_path(
             customer_id, ad_group_id
         )
-        criterion.keyword.text = text
+        criterion.keyword.text = kw.text
         criterion.keyword.match_type = getattr(
-            client.enums.KeywordMatchTypeEnum.KeywordMatchType, match_type
+            client.enums.KeywordMatchTypeEnum.KeywordMatchType,
+            kw.match_type,
         )
         operations.append(operation)
 
@@ -336,14 +354,14 @@ def add_keywords(
 def add_negative_keywords(
     customer_id: str,
     campaign_id: str,
-    keywords: list[dict],
+    keywords: list[KeywordInput],
 ) -> str:
     """Add negative keywords to a campaign.
 
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         campaign_id: The campaign ID to add negative keywords to.
-        keywords: List of keyword dicts, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
+        keywords: List of keyword objects, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
     """
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
@@ -353,12 +371,10 @@ def add_negative_keywords(
 
     operations = []
     for i, kw in enumerate(keywords):
-        text = kw.get("text", "")
-        if not text:
+        if not kw.text:
             return f"Error: keyword text must not be empty (index {i})"
-        match_type = kw.get("match_type", "BROAD")
-        if match_type not in valid_match_types:
-            return f"Error: match_type must be one of {valid_match_types}, got '{match_type}' (index {i})"
+        if kw.match_type not in valid_match_types:
+            return f"Error: match_type must be one of {valid_match_types}, got '{kw.match_type}' (index {i})"
 
         operation = client.get_type("CampaignCriterionOperation")
         criterion = operation.create
@@ -366,9 +382,10 @@ def add_negative_keywords(
             customer_id, campaign_id
         )
         criterion.negative = True
-        criterion.keyword.text = text
+        criterion.keyword.text = kw.text
         criterion.keyword.match_type = getattr(
-            client.enums.KeywordMatchTypeEnum.KeywordMatchType, match_type
+            client.enums.KeywordMatchTypeEnum.KeywordMatchType,
+            kw.match_type,
         )
         operations.append(operation)
 
@@ -626,7 +643,7 @@ def update_campaign_conversion_goal(
 def add_shared_set_negative_keywords(
     customer_id: str,
     shared_set_id: str,
-    keywords: list[dict],
+    keywords: list[KeywordInput],
 ) -> str:
     """Add negative keywords to a shared negative keyword list.
 
@@ -638,7 +655,7 @@ def add_shared_set_negative_keywords(
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         shared_set_id: The shared set ID to add negative keywords to.
-        keywords: List of keyword dicts, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
+        keywords: List of keyword objects, each with "text" (str) and "match_type" ("EXACT", "PHRASE", or "BROAD").
     """
     valid_match_types = ("EXACT", "PHRASE", "BROAD")
     client = utils.get_googleads_client()
@@ -646,25 +663,23 @@ def add_shared_set_negative_keywords(
         "SharedCriterionService"
     )
 
+    # Proto-plus enum integer values: EXACT=2, PHRASE=3, BROAD=4
+    _MATCH_TYPE = {"EXACT": 2, "PHRASE": 3, "BROAD": 4}
+
     operations = []
     for i, kw in enumerate(keywords):
-        text = kw.get("text", "")
-        if not text:
+        if not kw.text:
             return f"Error: keyword text must not be empty (index {i})"
-        match_type = kw.get("match_type", "BROAD")
-        if match_type not in valid_match_types:
-            return f"Error: match_type must be one of {valid_match_types}, got '{match_type}' (index {i})"
+        if kw.match_type not in valid_match_types:
+            return f"Error: match_type must be one of {valid_match_types}, got '{kw.match_type}' (index {i})"
 
         operation = client.get_type("SharedCriterionOperation")
         criterion = operation.create
         criterion.shared_set = (
             f"customers/{customer_id}/sharedSets/{shared_set_id}"
         )
-        # Proto-plus enum integer values: EXACT=2, PHRASE=3, BROAD=4
-        _MATCH_TYPE = {"EXACT": 2, "PHRASE": 3, "BROAD": 4}
-
-        criterion.keyword.text = text
-        criterion.keyword.match_type = _MATCH_TYPE[match_type]
+        criterion.keyword.text = kw.text
+        criterion.keyword.match_type = _MATCH_TYPE[kw.match_type]
         operations.append(operation)
 
     try:
@@ -817,7 +832,7 @@ _MINUTE_OF_HOUR = {
 def set_ad_schedule(
     customer_id: str,
     campaign_id: str,
-    schedules: list[dict],
+    schedules: list[AdScheduleInput],
 ) -> str:
     """Set ad schedules for a campaign. This replaces all existing ad schedules.
 
@@ -828,7 +843,7 @@ def set_ad_schedule(
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         campaign_id: The campaign ID to set schedules for.
-        schedules: List of schedule dicts, each with:
+        schedules: List of schedule objects, each with:
             - "day_of_week": "MONDAY"|"TUESDAY"|"WEDNESDAY"|"THURSDAY"|"FRIDAY"|"SATURDAY"|"SUNDAY"
             - "start_hour": 0-23
             - "start_minute": "ZERO"|"FIFTEEN"|"THIRTY"|"FORTY_FIVE" (default: "ZERO")
@@ -838,9 +853,7 @@ def set_ad_schedule(
     # Use a single client instance for all operations to avoid
     # proto-plus type incompatibility between separate client instances.
     client = utils.get_googleads_client()
-    campaign_criterion_service = client.get_service(
-        "CampaignCriterionService"
-    )
+    campaign_criterion_service = client.get_service("CampaignCriterionService")
 
     # Step 1: Remove existing ad schedules
     ga_service = client.get_service("GoogleAdsService")
@@ -864,7 +877,9 @@ def set_ad_schedule(
                 customer_id=customer_id, operations=remove_operations
             )
     except GoogleAdsException as ex:
-        return f"Error removing existing schedules: {_format_google_ads_error(ex)}"
+        return (
+            f"Error removing existing schedules: {_format_google_ads_error(ex)}"
+        )
 
     # Step 2: Add new schedules
     if not schedules:
@@ -872,40 +887,34 @@ def set_ad_schedule(
 
     create_operations = []
     for i, sched in enumerate(schedules):
-        day = sched.get("day_of_week", "")
-        if day not in _DAY_OF_WEEK:
+        if sched.day_of_week not in _DAY_OF_WEEK:
             return (
                 f"Error: day_of_week must be one of "
-                f"{list(_DAY_OF_WEEK.keys())}, got '{day}' (index {i})"
+                f"{list(_DAY_OF_WEEK.keys())}, got '{sched.day_of_week}' (index {i})"
             )
 
-        start_hour = sched.get("start_hour", 0)
-        end_hour = sched.get("end_hour", 24)
-        start_minute = sched.get("start_minute", "ZERO")
-        end_minute = sched.get("end_minute", "ZERO")
-
-        if start_minute not in _MINUTE_OF_HOUR:
-            return f"Error: invalid start_minute '{start_minute}' (index {i})"
-        if end_minute not in _MINUTE_OF_HOUR:
-            return f"Error: invalid end_minute '{end_minute}' (index {i})"
+        if sched.start_minute not in _MINUTE_OF_HOUR:
+            return f"Error: invalid start_minute '{sched.start_minute}' (index {i})"
+        if sched.end_minute not in _MINUTE_OF_HOUR:
+            return f"Error: invalid end_minute '{sched.end_minute}' (index {i})"
 
         operation = client.get_type("CampaignCriterionOperation")
         criterion = operation.create
         criterion.campaign = campaign_criterion_service.campaign_path(
             customer_id, campaign_id
         )
-        criterion.ad_schedule.day_of_week = _DAY_OF_WEEK[day]
-        criterion.ad_schedule.start_hour = start_hour
-        criterion.ad_schedule.start_minute = _MINUTE_OF_HOUR[start_minute]
-        criterion.ad_schedule.end_hour = end_hour
-        criterion.ad_schedule.end_minute = _MINUTE_OF_HOUR[end_minute]
+        criterion.ad_schedule.day_of_week = _DAY_OF_WEEK[sched.day_of_week]
+        criterion.ad_schedule.start_hour = sched.start_hour
+        criterion.ad_schedule.start_minute = _MINUTE_OF_HOUR[sched.start_minute]
+        criterion.ad_schedule.end_hour = sched.end_hour
+        criterion.ad_schedule.end_minute = _MINUTE_OF_HOUR[sched.end_minute]
         create_operations.append(operation)
 
     try:
         response = campaign_criterion_service.mutate_campaign_criteria(
             customer_id=customer_id, operations=create_operations
         )
-        days = [s["day_of_week"] for s in schedules]
+        days = [s.day_of_week for s in schedules]
         return (
             f"Set {len(response.results)} ad schedule(s) for campaign "
             f"{campaign_id}: {', '.join(days)}"

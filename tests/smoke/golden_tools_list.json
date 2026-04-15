@@ -6,7 +6,7 @@
           "tags": []
         }
       },
-      "description": "Add keywords to an ad group.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID to add keywords to.\n    keywords: List of keyword dicts, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
+      "description": "Add keywords to an ad group.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID to add keywords to.\n    keywords: List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18,7 +18,19 @@
           },
           "keywords": {
             "items": {
-              "additionalProperties": true,
+              "description": "A keyword with text and match type.",
+              "properties": {
+                "match_type": {
+                  "default": "BROAD",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ],
               "type": "object"
             },
             "type": "array"
@@ -51,7 +63,7 @@
           "tags": []
         }
       },
-      "description": "Add negative keywords to a campaign.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to add negative keywords to.\n    keywords: List of keyword dicts, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
+      "description": "Add negative keywords to a campaign.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to add negative keywords to.\n    keywords: List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -63,7 +75,19 @@
           },
           "keywords": {
             "items": {
-              "additionalProperties": true,
+              "description": "A keyword with text and match type.",
+              "properties": {
+                "match_type": {
+                  "default": "BROAD",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ],
               "type": "object"
             },
             "type": "array"
@@ -96,7 +120,7 @@
           "tags": []
         }
       },
-      "description": "Add negative keywords to a shared negative keyword list.\n\nShared sets are account-level negative keyword lists that can be linked\nto multiple campaigns. Use the ``search`` tool with resource\n``shared_set`` (conditions: ``shared_set.type = 'NEGATIVE_KEYWORDS'``)\nto find shared set IDs and names.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    shared_set_id: The shared set ID to add negative keywords to.\n    keywords: List of keyword dicts, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
+      "description": "Add negative keywords to a shared negative keyword list.\n\nShared sets are account-level negative keyword lists that can be linked\nto multiple campaigns. Use the ``search`` tool with resource\n``shared_set`` (conditions: ``shared_set.type = 'NEGATIVE_KEYWORDS'``)\nto find shared set IDs and names.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    shared_set_id: The shared set ID to add negative keywords to.\n    keywords: List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -105,7 +129,19 @@
           },
           "keywords": {
             "items": {
-              "additionalProperties": true,
+              "description": "A keyword with text and match type.",
+              "properties": {
+                "match_type": {
+                  "default": "BROAD",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ],
               "type": "object"
             },
             "type": "array"
@@ -424,7 +460,7 @@
           "tags": []
         }
       },
-      "description": "Set ad schedules for a campaign. This replaces all existing ad schedules.\n\nEach schedule defines a day and time window when ads should run.\nTo run ads Monday-Friday all day, pass 5 schedule entries (one per day)\nwith start_hour=0, end_hour=24.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to set schedules for.\n    schedules: List of schedule dicts, each with:\n        - \"day_of_week\": \"MONDAY\"|\"TUESDAY\"|\"WEDNESDAY\"|\"THURSDAY\"|\"FRIDAY\"|\"SATURDAY\"|\"SUNDAY\"\n        - \"start_hour\": 0-23\n        - \"start_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")\n        - \"end_hour\": 0-24 (24 means end of day)\n        - \"end_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")",
+      "description": "Set ad schedules for a campaign. This replaces all existing ad schedules.\n\nEach schedule defines a day and time window when ads should run.\nTo run ads Monday-Friday all day, pass 5 schedule entries (one per day)\nwith start_hour=0, end_hour=24.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to set schedules for.\n    schedules: List of schedule objects, each with:\n        - \"day_of_week\": \"MONDAY\"|\"TUESDAY\"|\"WEDNESDAY\"|\"THURSDAY\"|\"FRIDAY\"|\"SATURDAY\"|\"SUNDAY\"\n        - \"start_hour\": 0-23\n        - \"start_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")\n        - \"end_hour\": 0-24 (24 means end of day)\n        - \"end_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -436,7 +472,31 @@
           },
           "schedules": {
             "items": {
-              "additionalProperties": true,
+              "description": "An ad schedule entry defining a day and time window.",
+              "properties": {
+                "day_of_week": {
+                  "type": "string"
+                },
+                "end_hour": {
+                  "default": 24,
+                  "type": "integer"
+                },
+                "end_minute": {
+                  "default": "ZERO",
+                  "type": "string"
+                },
+                "start_hour": {
+                  "default": 0,
+                  "type": "integer"
+                },
+                "start_minute": {
+                  "default": "ZERO",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day_of_week"
+              ],
               "type": "object"
             },
             "type": "array"
