@@ -1078,6 +1078,7 @@ def create_pmax_campaign(
     name: str,
     budget_amount_micros: int,
     brand_guidelines_enabled: bool = False,
+    campaign_assets: list[AssetLink] | None = None,
 ) -> str:
     """Create a new Performance Max campaign in PAUSED state with a new daily budget.
 
@@ -1090,21 +1091,44 @@ def create_pmax_campaign(
     Brand Guidelines:
       When ``brand_guidelines_enabled`` is True, the campaign requires at least
       one BUSINESS_NAME and one LOGO linked at the campaign level
-      (CampaignAsset). Use ``link_assets_to_campaign`` after creation to attach
-      them. Default is False to allow creating the campaign without those
-      assets pre-existing.
+      (CampaignAsset). Pass them via ``campaign_assets`` so they are attached
+      atomically with the campaign creation (the API rejects either side if
+      the other is missing). Note: ``brand_guidelines_enabled`` cannot be
+      changed after creation, so set it correctly here.
 
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         name: Campaign name.
         budget_amount_micros: Daily budget in micros (e.g., 3000000000 = ¥3,000/day). Must be positive.
         brand_guidelines_enabled: Whether to enable Brand Guidelines on the campaign. Defaults to False.
+        campaign_assets: List of {"asset_id": "...", "field_type": "..."} entries
+            to attach as CampaignAsset entries atomically with the campaign.
+            Required when ``brand_guidelines_enabled`` is True (at least one
+            BUSINESS_NAME and one LOGO).
     """
     if budget_amount_micros <= 0:
         return (
             f"Error: budget_amount_micros must be positive, "
             f"got {budget_amount_micros}"
         )
+
+    asset_links = (
+        [
+            AssetLink(**a) if isinstance(a, dict) else a
+            for a in _ensure_list(campaign_assets)
+        ]
+        if campaign_assets
+        else []
+    )
+    valid_field_types = set(_ASSET_FIELD_TYPE.keys()) | {"YOUTUBE_VIDEO"}
+    for i, link in enumerate(asset_links):
+        if link.field_type not in valid_field_types:
+            return (
+                f"Error: campaign_assets[{i}].field_type must be one of "
+                f"{sorted(valid_field_types)}, got '{link.field_type}'"
+            )
+        if not link.asset_id:
+            return f"Error: campaign_assets[{i}].asset_id must not be empty"
 
     try:
         client = utils.get_googleads_client()
@@ -1123,9 +1147,38 @@ def create_pmax_campaign(
         )
         budget_resource_name = budget_response.results[0].resource_name
 
-        campaign_service = utils.get_googleads_service("CampaignService")
-        campaign_operation = client.get_type("CampaignOperation")
-        campaign = campaign_operation.create
+        # Without campaign_assets, fall back to the simple single-mutate path.
+        if not asset_links:
+            campaign_service = utils.get_googleads_service("CampaignService")
+            campaign_operation = client.get_type("CampaignOperation")
+            campaign = campaign_operation.create
+            campaign.name = name
+            campaign.status = 3  # PAUSED
+            campaign.advertising_channel_type = 10  # PERFORMANCE_MAX
+            campaign.campaign_budget = budget_resource_name
+            campaign.maximize_conversions.target_cpa_micros = 0
+            campaign.contains_eu_political_advertising = 3  # NO
+            campaign.brand_guidelines_enabled = brand_guidelines_enabled
+
+            response = campaign_service.mutate_campaigns(
+                customer_id=customer_id, operations=[campaign_operation]
+            )
+            return (
+                f"Created P-MAX campaign {response.results[0].resource_name} "
+                f"(PAUSED, budget: "
+                f"{budget_amount_micros / 1_000_000:.2f}/day)"
+            )
+
+        # Atomic mutate: Campaign + CampaignAssets in one transaction
+        # using a temporary resource name (-1) for the campaign.
+        ga_service = utils.get_googleads_service("GoogleAdsService")
+        temp_campaign_resource = f"customers/{customer_id}/campaigns/-1"
+
+        mutate_operations = []
+
+        camp_mutate = client.get_type("MutateOperation")
+        campaign = camp_mutate.campaign_operation.create
+        campaign.resource_name = temp_campaign_resource
         campaign.name = name
         campaign.status = 3  # PAUSED
         campaign.advertising_channel_type = 10  # PERFORMANCE_MAX
@@ -1133,14 +1186,27 @@ def create_pmax_campaign(
         campaign.maximize_conversions.target_cpa_micros = 0
         campaign.contains_eu_political_advertising = 3  # NO
         campaign.brand_guidelines_enabled = brand_guidelines_enabled
+        mutate_operations.append(camp_mutate)
 
-        response = campaign_service.mutate_campaigns(
-            customer_id=customer_id, operations=[campaign_operation]
+        for link in asset_links:
+            link_mutate = client.get_type("MutateOperation")
+            ca = link_mutate.campaign_asset_operation.create
+            ca.campaign = temp_campaign_resource
+            ca.asset = f"customers/{customer_id}/assets/{link.asset_id}"
+            ca.field_type = _ASSET_FIELD_TYPE[link.field_type]
+            mutate_operations.append(link_mutate)
+
+        response = ga_service.mutate(
+            customer_id=customer_id, mutate_operations=mutate_operations
         )
+        camp_resource = response.mutate_operation_responses[
+            0
+        ].campaign_result.resource_name
         return (
-            f"Created P-MAX campaign {response.results[0].resource_name} "
-            f"(PAUSED, budget: "
-            f"{budget_amount_micros / 1_000_000:.2f}/day)"
+            f"Created P-MAX campaign {camp_resource} "
+            f"(PAUSED, budget: {budget_amount_micros / 1_000_000:.2f}/day, "
+            f"brand_guidelines={brand_guidelines_enabled}, "
+            f"linked {len(asset_links)} CampaignAsset(s))"
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
