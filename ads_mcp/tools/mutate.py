@@ -1634,3 +1634,113 @@ def link_assets_to_asset_group(
         return _format_google_ads_error(ex)
     except Exception as ex:
         return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def add_campaign_language(
+    customer_id: str,
+    campaign_id: str,
+    language_constant_ids: list[str],
+) -> str:
+    """Add language targeting to a campaign.
+
+    Common language constant IDs:
+      - 1000: English
+      - 1005: Japanese
+      - 1017: Chinese (Simplified)
+      - 1018: Chinese (Traditional)
+      - 1021: Korean
+
+    Reference: https://developers.google.com/google-ads/api/data/codes-formats#languages
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID to add language targeting to.
+        language_constant_ids: List of language constant IDs (e.g., ["1005"] for Japanese).
+    """
+    language_constant_ids = _ensure_list(language_constant_ids)
+    if not language_constant_ids:
+        return "Error: language_constant_ids must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        service = utils.get_googleads_service("CampaignCriterionService")
+
+        operations = []
+        for lang_id in language_constant_ids:
+            operation = client.get_type("CampaignCriterionOperation")
+            criterion = operation.create
+            criterion.campaign = (
+                f"customers/{customer_id}/campaigns/{campaign_id}"
+            )
+            criterion.language.language_constant = (
+                f"languageConstants/{lang_id}"
+            )
+            operations.append(operation)
+
+        response = service.mutate_campaign_criteria(
+            customer_id=customer_id, operations=operations
+        )
+        return (
+            f"Added {len(response.results)} language target(s) to campaign "
+            f"{campaign_id}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def add_campaign_location(
+    customer_id: str,
+    campaign_id: str,
+    geo_target_constant_ids: list[str],
+) -> str:
+    """Add location (geo) targeting to a campaign.
+
+    Common geo target constant IDs:
+      - 2392: Japan
+      - 2840: United States
+      - 2826: United Kingdom
+      - 2156: China
+      - 2410: South Korea
+
+    Reference: https://developers.google.com/google-ads/api/data/geotargets
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID to add location targeting to.
+        geo_target_constant_ids: List of geo target constant IDs (e.g., ["2392"] for Japan).
+    """
+    geo_target_constant_ids = _ensure_list(geo_target_constant_ids)
+    if not geo_target_constant_ids:
+        return "Error: geo_target_constant_ids must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        service = utils.get_googleads_service("CampaignCriterionService")
+
+        operations = []
+        for geo_id in geo_target_constant_ids:
+            operation = client.get_type("CampaignCriterionOperation")
+            criterion = operation.create
+            criterion.campaign = (
+                f"customers/{customer_id}/campaigns/{campaign_id}"
+            )
+            criterion.location.geo_target_constant = (
+                f"geoTargetConstants/{geo_id}"
+            )
+            operations.append(operation)
+
+        response = service.mutate_campaign_criteria(
+            customer_id=customer_id, operations=operations
+        )
+        return (
+            f"Added {len(response.results)} location target(s) to campaign "
+            f"{campaign_id}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
