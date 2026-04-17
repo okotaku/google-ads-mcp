@@ -15,6 +15,8 @@
 """Tools for mutating Google Ads resources via the MCP server."""
 
 import json
+import os
+from pathlib import Path
 
 from pydantic import BaseModel
 
@@ -1008,3 +1010,352 @@ def set_ad_schedule(
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
+
+
+# ---------------------------------------------------------------------------
+# Performance Max (P-MAX) tools
+# ---------------------------------------------------------------------------
+
+# Proto-plus enum integer values for asset field types used by P-MAX.
+# Reference: AssetFieldTypeEnum.AssetFieldType
+_ASSET_FIELD_TYPE = {
+    "HEADLINE": 2,
+    "DESCRIPTION": 3,
+    "MARKETING_IMAGE": 5,
+    "YOUTUBE_VIDEO": 7,
+    "CALLOUT": 11,
+    "LONG_HEADLINE": 17,
+    "BUSINESS_NAME": 18,
+    "SQUARE_MARKETING_IMAGE": 19,
+    "PORTRAIT_MARKETING_IMAGE": 20,
+    "LOGO": 21,
+    "LANDSCAPE_LOGO": 22,
+}
+
+_TEXT_ASSET_FIELD_TYPES = {
+    "HEADLINE",
+    "LONG_HEADLINE",
+    "DESCRIPTION",
+    "BUSINESS_NAME",
+    "CALLOUT",
+}
+
+_IMAGE_ASSET_FIELD_TYPES = {
+    "MARKETING_IMAGE",
+    "SQUARE_MARKETING_IMAGE",
+    "PORTRAIT_MARKETING_IMAGE",
+    "LOGO",
+    "LANDSCAPE_LOGO",
+}
+
+
+class AssetLink(BaseModel):
+    """An asset to link to an asset group with a specific field type."""
+
+    asset_id: str
+    field_type: str
+
+
+def _read_image_bytes(image_path: str) -> bytes:
+    """Read raw image bytes from a local file path.
+
+    Raises:
+        FileNotFoundError: When the path does not point to an existing file.
+        ValueError: When the file is empty.
+    """
+    path = Path(os.path.expanduser(image_path))
+    if not path.is_file():
+        raise FileNotFoundError(f"image not found: {image_path}")
+    data = path.read_bytes()
+    if not data:
+        raise ValueError(f"image is empty: {image_path}")
+    return data
+
+
+@mcp.tool()
+def create_pmax_campaign(
+    customer_id: str,
+    name: str,
+    budget_amount_micros: int,
+) -> str:
+    """Create a new Performance Max campaign in PAUSED state with a new daily budget.
+
+    Performance Max campaigns auto-target Search, Display, YouTube, Discover,
+    Gmail, and Maps using the supplied asset group(s). The campaign is created
+    with MAXIMIZE_CONVERSIONS bidding (uncapped). Asset groups must be created
+    separately via ``create_asset_group`` and populated via ``upload_image_asset``,
+    ``create_text_asset``, and ``link_assets_to_asset_group``.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        name: Campaign name.
+        budget_amount_micros: Daily budget in micros (e.g., 3000000000 = ¥3,000/day). Must be positive.
+    """
+    if budget_amount_micros <= 0:
+        return (
+            f"Error: budget_amount_micros must be positive, "
+            f"got {budget_amount_micros}"
+        )
+
+    try:
+        client = utils.get_googleads_client()
+
+        budget_service = utils.get_googleads_service("CampaignBudgetService")
+        budget_operation = client.get_type("CampaignBudgetOperation")
+        budget = budget_operation.create
+        budget.name = f"{name} Budget"
+        budget.amount_micros = budget_amount_micros
+        budget.delivery_method = 2  # STANDARD
+        # P-MAX requires a non-shared budget.
+        budget.explicitly_shared = False
+
+        budget_response = budget_service.mutate_campaign_budgets(
+            customer_id=customer_id, operations=[budget_operation]
+        )
+        budget_resource_name = budget_response.results[0].resource_name
+
+        campaign_service = utils.get_googleads_service("CampaignService")
+        campaign_operation = client.get_type("CampaignOperation")
+        campaign = campaign_operation.create
+        campaign.name = name
+        campaign.status = 3  # PAUSED
+        campaign.advertising_channel_type = 10  # PERFORMANCE_MAX
+        campaign.campaign_budget = budget_resource_name
+        campaign.maximize_conversions.target_cpa_micros = 0
+        campaign.contains_eu_political_advertising = 3  # NO
+
+        response = campaign_service.mutate_campaigns(
+            customer_id=customer_id, operations=[campaign_operation]
+        )
+        return (
+            f"Created P-MAX campaign {response.results[0].resource_name} "
+            f"(PAUSED, budget: "
+            f"{budget_amount_micros / 1_000_000:.2f}/day)"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def create_asset_group(
+    customer_id: str,
+    campaign_id: str,
+    name: str,
+    final_url: str,
+) -> str:
+    """Create a new Performance Max asset group in PAUSED state.
+
+    The asset group is the container that holds all creative assets (images,
+    text, logos) for a P-MAX campaign. After creation, attach assets via
+    ``link_assets_to_asset_group``.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The P-MAX campaign ID.
+        name: Asset group name.
+        final_url: Landing page URL (e.g., "https://example.com/landing").
+    """
+    if not final_url:
+        return "Error: final_url must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        campaign_service = utils.get_googleads_service("CampaignService")
+        asset_group_service = utils.get_googleads_service("AssetGroupService")
+        asset_group_operation = client.get_type("AssetGroupOperation")
+
+        asset_group = asset_group_operation.create
+        asset_group.name = name
+        asset_group.campaign = campaign_service.campaign_path(
+            customer_id, campaign_id
+        )
+        asset_group.status = 3  # PAUSED
+        asset_group.final_urls.append(final_url)
+
+        response = asset_group_service.mutate_asset_groups(
+            customer_id=customer_id, operations=[asset_group_operation]
+        )
+        return (
+            f"Created asset group {response.results[0].resource_name} "
+            f"(PAUSED, final_url: {final_url})"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def upload_image_asset(
+    customer_id: str,
+    name: str,
+    image_path: str,
+) -> str:
+    """Upload a local image file as a Google Ads image asset.
+
+    The returned asset ID can be linked to a P-MAX asset group via
+    ``link_assets_to_asset_group`` with an image field type
+    (MARKETING_IMAGE / SQUARE_MARKETING_IMAGE / PORTRAIT_MARKETING_IMAGE /
+    LOGO / LANDSCAPE_LOGO).
+
+    Recommended dimensions:
+      - MARKETING_IMAGE (1.91:1): 1200x628 or larger
+      - SQUARE_MARKETING_IMAGE (1:1): 1200x1200 or larger
+      - PORTRAIT_MARKETING_IMAGE (4:5): 960x1200 or larger
+      - LOGO (1:1): 1200x1200, recommended >= 128x128
+      - LANDSCAPE_LOGO (4:1): 1200x300
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        name: Asset display name (used to identify the asset in the UI).
+        image_path: Absolute or ``~``-expanded local file path (PNG/JPG).
+    """
+    if not name:
+        return "Error: name must not be empty"
+    try:
+        image_bytes = _read_image_bytes(image_path)
+    except (FileNotFoundError, ValueError) as ex:
+        return f"Error: {ex}"
+
+    try:
+        client = utils.get_googleads_client()
+        asset_service = utils.get_googleads_service("AssetService")
+        asset_operation = client.get_type("AssetOperation")
+
+        asset = asset_operation.create
+        asset.name = name
+        asset.type_ = 4  # IMAGE
+        asset.image_asset.data = image_bytes
+
+        response = asset_service.mutate_assets(
+            customer_id=customer_id, operations=[asset_operation]
+        )
+        resource_name = response.results[0].resource_name
+        asset_id = resource_name.split("/")[-1]
+        return (
+            f"Uploaded image asset {resource_name} "
+            f"(asset_id: {asset_id}, bytes: {len(image_bytes)})"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def create_text_asset(
+    customer_id: str,
+    text: str,
+) -> str:
+    """Create a reusable text asset (used for HEADLINE / LONG_HEADLINE / DESCRIPTION / BUSINESS_NAME / CALLOUT).
+
+    The returned asset ID can be linked to a P-MAX asset group via
+    ``link_assets_to_asset_group`` with the appropriate text field type.
+    Length limits depend on field type at link time:
+      - HEADLINE: max 30 chars (display width)
+      - LONG_HEADLINE: max 90 chars
+      - DESCRIPTION: max 90 chars (or 60 for the short slot)
+      - BUSINESS_NAME: max 25 chars
+      - CALLOUT: max 25 chars
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        text: The asset text.
+    """
+    if not text:
+        return "Error: text must not be empty"
+
+    try:
+        client = utils.get_googleads_client()
+        asset_service = utils.get_googleads_service("AssetService")
+        asset_operation = client.get_type("AssetOperation")
+
+        asset = asset_operation.create
+        asset.type_ = 5  # TEXT
+        asset.text_asset.text = text
+
+        response = asset_service.mutate_assets(
+            customer_id=customer_id, operations=[asset_operation]
+        )
+        resource_name = response.results[0].resource_name
+        asset_id = resource_name.split("/")[-1]
+        return (
+            f"Created text asset {resource_name} "
+            f"(asset_id: {asset_id}, text: {text!r})"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def link_assets_to_asset_group(
+    customer_id: str,
+    asset_group_id: str,
+    assets: list[AssetLink],
+) -> str:
+    """Link existing assets to a Performance Max asset group with a field type.
+
+    Each entry attaches a single asset (created by ``upload_image_asset`` or
+    ``create_text_asset``) to the asset group as the given creative slot.
+
+    Field type must be one of:
+      Image: MARKETING_IMAGE, SQUARE_MARKETING_IMAGE, PORTRAIT_MARKETING_IMAGE,
+             LOGO, LANDSCAPE_LOGO
+      Text:  HEADLINE, LONG_HEADLINE, DESCRIPTION, BUSINESS_NAME, CALLOUT
+      Video: YOUTUBE_VIDEO
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        asset_group_id: The asset group ID to link assets to.
+        assets: List of {"asset_id": "...", "field_type": "..."} entries.
+    """
+    assets = [
+        AssetLink(**a) if isinstance(a, dict) else a
+        for a in _ensure_list(assets)
+    ]
+    if not assets:
+        return "Error: assets must contain at least one entry"
+
+    valid_field_types = set(_ASSET_FIELD_TYPE.keys()) | {"YOUTUBE_VIDEO"}
+    for i, link in enumerate(assets):
+        if link.field_type not in valid_field_types:
+            return (
+                f"Error: field_type must be one of "
+                f"{sorted(valid_field_types)}, "
+                f"got '{link.field_type}' (index {i})"
+            )
+        if not link.asset_id:
+            return f"Error: asset_id must not be empty (index {i})"
+
+    try:
+        client = utils.get_googleads_client()
+        service = utils.get_googleads_service("AssetGroupAssetService")
+
+        operations = []
+        for link in assets:
+            operation = client.get_type("AssetGroupAssetOperation")
+            asset_group_asset = operation.create
+            asset_group_asset.asset_group = (
+                f"customers/{customer_id}/assetGroups/{asset_group_id}"
+            )
+            asset_group_asset.asset = (
+                f"customers/{customer_id}/assets/{link.asset_id}"
+            )
+            asset_group_asset.field_type = _ASSET_FIELD_TYPE[link.field_type]
+            operations.append(operation)
+
+        response = service.mutate_asset_group_assets(
+            customer_id=customer_id, operations=operations
+        )
+        return (
+            f"Linked {len(response.results)} asset(s) to asset group "
+            f"{asset_group_id}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
