@@ -1077,6 +1077,7 @@ def create_pmax_campaign(
     customer_id: str,
     name: str,
     budget_amount_micros: int,
+    brand_guidelines_enabled: bool = False,
 ) -> str:
     """Create a new Performance Max campaign in PAUSED state with a new daily budget.
 
@@ -1086,10 +1087,18 @@ def create_pmax_campaign(
     separately via ``create_asset_group`` and populated via ``upload_image_asset``,
     ``create_text_asset``, and ``link_assets_to_asset_group``.
 
+    Brand Guidelines:
+      When ``brand_guidelines_enabled`` is True, the campaign requires at least
+      one BUSINESS_NAME and one LOGO linked at the campaign level
+      (CampaignAsset). Use ``link_assets_to_campaign`` after creation to attach
+      them. Default is False to allow creating the campaign without those
+      assets pre-existing.
+
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         name: Campaign name.
         budget_amount_micros: Daily budget in micros (e.g., 3000000000 = ¥3,000/day). Must be positive.
+        brand_guidelines_enabled: Whether to enable Brand Guidelines on the campaign. Defaults to False.
     """
     if budget_amount_micros <= 0:
         return (
@@ -1123,6 +1132,7 @@ def create_pmax_campaign(
         campaign.campaign_budget = budget_resource_name
         campaign.maximize_conversions.target_cpa_micros = 0
         campaign.contains_eu_political_advertising = 3  # NO
+        campaign.brand_guidelines_enabled = brand_guidelines_enabled
 
         response = campaign_service.mutate_campaigns(
             customer_id=customer_id, operations=[campaign_operation]
@@ -1284,6 +1294,78 @@ def create_text_asset(
         return (
             f"Created text asset {resource_name} "
             f"(asset_id: {asset_id}, text: {text!r})"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+def link_assets_to_campaign(
+    customer_id: str,
+    campaign_id: str,
+    assets: list[AssetLink],
+) -> str:
+    """Link existing assets to a campaign with a field type (CampaignAsset).
+
+    Required for Performance Max campaigns with Brand Guidelines enabled,
+    which mandate at least one BUSINESS_NAME and one LOGO linked at the
+    campaign level (CampaignAsset, not AssetGroupAsset).
+
+    Field type must be one of:
+      Image: LOGO, LANDSCAPE_LOGO
+      Text:  BUSINESS_NAME
+
+    Other field types are technically accepted by the API, but Brand Guidelines
+    only consumes BUSINESS_NAME and LOGO/LANDSCAPE_LOGO at the campaign level.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID to link assets to.
+        assets: List of {"asset_id": "...", "field_type": "..."} entries.
+    """
+    assets = [
+        AssetLink(**a) if isinstance(a, dict) else a
+        for a in _ensure_list(assets)
+    ]
+    if not assets:
+        return "Error: assets must contain at least one entry"
+
+    valid_field_types = set(_ASSET_FIELD_TYPE.keys()) | {"YOUTUBE_VIDEO"}
+    for i, link in enumerate(assets):
+        if link.field_type not in valid_field_types:
+            return (
+                f"Error: field_type must be one of "
+                f"{sorted(valid_field_types)}, "
+                f"got '{link.field_type}' (index {i})"
+            )
+        if not link.asset_id:
+            return f"Error: asset_id must not be empty (index {i})"
+
+    try:
+        client = utils.get_googleads_client()
+        service = utils.get_googleads_service("CampaignAssetService")
+
+        operations = []
+        for link in assets:
+            operation = client.get_type("CampaignAssetOperation")
+            campaign_asset = operation.create
+            campaign_asset.campaign = (
+                f"customers/{customer_id}/campaigns/{campaign_id}"
+            )
+            campaign_asset.asset = (
+                f"customers/{customer_id}/assets/{link.asset_id}"
+            )
+            campaign_asset.field_type = _ASSET_FIELD_TYPE[link.field_type]
+            operations.append(operation)
+
+        response = service.mutate_campaign_assets(
+            customer_id=customer_id, operations=operations
+        )
+        return (
+            f"Linked {len(response.results)} asset(s) to campaign "
+            f"{campaign_id}"
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
