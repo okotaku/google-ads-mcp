@@ -1149,6 +1149,54 @@ def create_pmax_campaign(
 
 
 @mcp.tool()
+def update_campaign_brand_guidelines(
+    customer_id: str,
+    campaign_id: str,
+    enabled: bool,
+) -> str:
+    """Toggle Brand Guidelines on a Performance Max campaign.
+
+    When ``enabled`` is True, the campaign will require at least one
+    BUSINESS_NAME and one LOGO linked at the campaign level
+    (CampaignAsset). Use ``link_assets_to_campaign`` BEFORE enabling if
+    those assets are not already attached as CampaignAsset entries.
+
+    When ``enabled`` is False, BUSINESS_NAME and LOGO must instead be
+    attached as AssetGroupAsset entries on every asset group.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The P-MAX campaign ID.
+        enabled: True to enable Brand Guidelines, False to disable.
+    """
+    try:
+        client = utils.get_googleads_client()
+        campaign_service = utils.get_googleads_service("CampaignService")
+        campaign_operation = client.get_type("CampaignOperation")
+
+        campaign = campaign_operation.update
+        campaign.resource_name = campaign_service.campaign_path(
+            customer_id, campaign_id
+        )
+        campaign.brand_guidelines_enabled = enabled
+        campaign_operation.update_mask = field_mask_pb2.FieldMask(
+            paths=["brand_guidelines_enabled"]
+        )
+
+        response = campaign_service.mutate_campaigns(
+            customer_id=customer_id, operations=[campaign_operation]
+        )
+        return (
+            f"Updated campaign {response.results[0].resource_name} "
+            f"brand_guidelines_enabled to {enabled}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
 def create_asset_group(
     customer_id: str,
     campaign_id: str,
