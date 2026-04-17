@@ -1154,42 +1154,121 @@ def create_asset_group(
     campaign_id: str,
     name: str,
     final_url: str,
+    assets: list[AssetLink] | None = None,
 ) -> str:
     """Create a new Performance Max asset group in PAUSED state.
 
     The asset group is the container that holds all creative assets (images,
-    text, logos) for a P-MAX campaign. After creation, attach assets via
+    text, logos) for a P-MAX campaign.
+
+    Google Ads requires the asset group and its required assets to be created
+    in a single atomic ``mutate`` call. Pass the full set of pre-created assets
+    (created via ``upload_image_asset`` and ``create_text_asset``) via the
+    ``assets`` parameter so the asset group is created with all required slots
+    filled. Additional assets can be attached later via
     ``link_assets_to_asset_group``.
+
+    Minimum required assets for a valid P-MAX asset group:
+      - 3 HEADLINE
+      - 1 LONG_HEADLINE
+      - 2 DESCRIPTION
+      - 1 BUSINESS_NAME
+      - 1 MARKETING_IMAGE
+      - 1 SQUARE_MARKETING_IMAGE
+      - 1 LOGO
 
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         campaign_id: The P-MAX campaign ID.
         name: Asset group name.
         final_url: Landing page URL (e.g., "https://example.com/landing").
+        assets: List of {"asset_id": "...", "field_type": "..."} entries to
+            link to the asset group at creation time. Optional; if omitted,
+            the asset group will be created without any linked assets and
+            the API will reject it unless the minimum requirements are met.
     """
     if not final_url:
         return "Error: final_url must not be empty"
+
+    asset_links = (
+        [
+            AssetLink(**a) if isinstance(a, dict) else a
+            for a in _ensure_list(assets)
+        ]
+        if assets
+        else []
+    )
+    valid_field_types = set(_ASSET_FIELD_TYPE.keys()) | {"YOUTUBE_VIDEO"}
+    for i, link in enumerate(asset_links):
+        if link.field_type not in valid_field_types:
+            return (
+                f"Error: assets[{i}].field_type must be one of "
+                f"{sorted(valid_field_types)}, got '{link.field_type}'"
+            )
+        if not link.asset_id:
+            return f"Error: assets[{i}].asset_id must not be empty"
 
     try:
         client = utils.get_googleads_client()
         campaign_service = utils.get_googleads_service("CampaignService")
         asset_group_service = utils.get_googleads_service("AssetGroupService")
-        asset_group_operation = client.get_type("AssetGroupOperation")
 
-        asset_group = asset_group_operation.create
+        # When no assets to link, use the simple single-mutate path.
+        if not asset_links:
+            asset_group_operation = client.get_type("AssetGroupOperation")
+            asset_group = asset_group_operation.create
+            asset_group.name = name
+            asset_group.campaign = campaign_service.campaign_path(
+                customer_id, campaign_id
+            )
+            asset_group.status = 3  # PAUSED
+            asset_group.final_urls.append(final_url)
+
+            response = asset_group_service.mutate_asset_groups(
+                customer_id=customer_id, operations=[asset_group_operation]
+            )
+            return (
+                f"Created asset group {response.results[0].resource_name} "
+                f"(PAUSED, final_url: {final_url}, no assets linked)"
+            )
+
+        # Atomic mutate: AssetGroup + AssetGroupAssets in one transaction
+        # using a temporary resource name (-1) for the asset group.
+        ga_service = utils.get_googleads_service("GoogleAdsService")
+        temp_asset_group_resource = f"customers/{customer_id}/assetGroups/-1"
+
+        mutate_operations = []
+
+        ag_mutate = client.get_type("MutateOperation")
+        asset_group = ag_mutate.asset_group_operation.create
+        asset_group.resource_name = temp_asset_group_resource
         asset_group.name = name
         asset_group.campaign = campaign_service.campaign_path(
             customer_id, campaign_id
         )
         asset_group.status = 3  # PAUSED
         asset_group.final_urls.append(final_url)
+        mutate_operations.append(ag_mutate)
 
-        response = asset_group_service.mutate_asset_groups(
-            customer_id=customer_id, operations=[asset_group_operation]
+        for link in asset_links:
+            link_mutate = client.get_type("MutateOperation")
+            aga = link_mutate.asset_group_asset_operation.create
+            aga.asset_group = temp_asset_group_resource
+            aga.asset = f"customers/{customer_id}/assets/{link.asset_id}"
+            aga.field_type = _ASSET_FIELD_TYPE[link.field_type]
+            mutate_operations.append(link_mutate)
+
+        response = ga_service.mutate(
+            customer_id=customer_id, mutate_operations=mutate_operations
         )
+        # First result is the AssetGroup; remaining are AssetGroupAssets.
+        ag_resource = response.mutate_operation_responses[
+            0
+        ].asset_group_result.resource_name
         return (
-            f"Created asset group {response.results[0].resource_name} "
-            f"(PAUSED, final_url: {final_url})"
+            f"Created asset group {ag_resource} "
+            f"(PAUSED, final_url: {final_url}, "
+            f"linked {len(asset_links)} asset(s))"
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
