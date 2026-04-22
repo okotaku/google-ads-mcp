@@ -633,6 +633,52 @@ def update_asset_group_final_url(
 
 
 @mcp.tool()
+def update_asset_group_status(
+    customer_id: str,
+    asset_group_id: str,
+    status: str,
+) -> str:
+    """Update a Performance Max asset group's status (ENABLED or PAUSED).
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        asset_group_id: The asset group ID to update.
+        status: New status — must be "ENABLED" or "PAUSED".
+    """
+    if err := _validate_status(status):
+        return err
+
+    # Proto-plus enum integer values: ENABLED=2, PAUSED=3
+    _ASSET_GROUP_STATUS = {"ENABLED": 2, "PAUSED": 3}
+
+    try:
+        client = utils.get_googleads_client()
+        asset_group_service = utils.get_googleads_service("AssetGroupService")
+        asset_group_operation = client.get_type("AssetGroupOperation")
+
+        asset_group = asset_group_operation.update
+        asset_group.resource_name = asset_group_service.asset_group_path(
+            customer_id, asset_group_id
+        )
+        asset_group.status = _ASSET_GROUP_STATUS[status]
+        asset_group_operation.update_mask = field_mask_pb2.FieldMask(
+            paths=["status"]
+        )
+
+        response = asset_group_service.mutate_asset_groups(
+            customer_id=customer_id, operations=[asset_group_operation]
+        )
+        return (
+            f"Updated asset group {response.results[0].resource_name} "
+            f"to {status}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
 def update_campaign_conversion_goal(
     customer_id: str,
     campaign_id: str,

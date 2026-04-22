@@ -779,6 +779,47 @@
           "tags": []
         }
       },
+      "description": "Update a Performance Max asset group's status (ENABLED or PAUSED).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    asset_group_id: The asset group ID to update.\n    status: New status — must be \"ENABLED\" or \"PAUSED\".",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_group_id": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id",
+          "asset_group_id",
+          "status"
+        ],
+        "type": "object"
+      },
+      "name": "update_asset_group_status",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      }
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
       "description": "Update a campaign's bidding strategy.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to update.\n    strategy_type: One of \"TARGET_CPA\", \"TARGET_ROAS\", \"MAXIMIZE_CONVERSIONS\", \"MAXIMIZE_CONVERSION_VALUE\".\n    target_value_micros: Target CPA in micros (required for TARGET_CPA, e.g., 5000000 = $5). Optional for MAXIMIZE_CONVERSIONS (uncapped if omitted).\n    target_roas: Target ROAS as a float (required for TARGET_ROAS, e.g., 4.0 = 400% ROAS). Optional for MAXIMIZE_CONVERSION_VALUE (uncapped if omitted).",
       "inputSchema": {
         "additionalProperties": false,
