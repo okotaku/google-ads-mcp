@@ -36,8 +36,10 @@ _GAQL_FILENAME = "gaql_resources.txt"
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Read-only scope for Analytics Admin API and Analytics Data API.
-_READ_ONLY_ADS_SCOPE = "https://www.googleapis.com/auth/adwords"
+# OAuth scope for the Google Ads API. Google Ads does not publish a separate
+# read-only scope; access is restricted to read methods by the tools this
+# server exposes (see ads_mcp/tools/).
+_ADS_SCOPE = "https://www.googleapis.com/auth/adwords"
 
 
 def _create_credentials() -> google.auth.credentials.Credentials:
@@ -57,7 +59,7 @@ def _create_credentials() -> google.auth.credentials.Credentials:
         return Credentials(token=token_obj.token)
 
     # 3. Fall back to Application Default Credentials.
-    credentials, _ = google.auth.default(scopes=[_READ_ONLY_ADS_SCOPE])
+    credentials, _ = google.auth.default(scopes=[_ADS_SCOPE])
     return credentials
 
 
