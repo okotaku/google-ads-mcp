@@ -6,17 +6,20 @@
           "tags": []
         }
       },
-      "description": "Add language targeting to a campaign.\n\nCommon language constant IDs:\n  - 1000: English\n  - 1005: Japanese\n  - 1017: Chinese (Simplified)\n  - 1018: Chinese (Traditional)\n  - 1021: Korean\n\nReference: https://developers.google.com/google-ads/api/data/codes-formats#languages\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to add language targeting to.\n    language_constant_ids: List of language constant IDs (e.g., [\"1005\"] for Japanese).",
+      "description": "Add language targeting to a campaign.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to add language targeting to.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "language_constant_ids": {
+            "description": "List of language constant IDs (e.g., [\"1005\"] for Japanese).",
             "items": {
               "type": "string"
             },
@@ -50,17 +53,20 @@
           "tags": []
         }
       },
-      "description": "Add location (geo) targeting to a campaign.\n\nCommon geo target constant IDs:\n  - 2392: Japan\n  - 2840: United States\n  - 2826: United Kingdom\n  - 2156: China\n  - 2410: South Korea\n\nReference: https://developers.google.com/google-ads/api/data/geotargets\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to add location targeting to.\n    geo_target_constant_ids: List of geo target constant IDs (e.g., [\"2392\"] for Japan).",
+      "description": "Add location (geo) targeting to a campaign.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to add location targeting to.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "geo_target_constant_ids": {
+            "description": "List of geo target constant IDs (e.g., [\"2392\"] for Japan).",
             "items": {
               "type": "string"
             },
@@ -94,17 +100,20 @@
           "tags": []
         }
       },
-      "description": "Add keywords to an ad group.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID to add keywords to.\n    keywords: List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
+      "description": "Add keywords to an ad group.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "ad_group_id": {
+            "description": "The ad group ID to add keywords to.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "keywords": {
+            "description": "List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
             "items": {
               "description": "A keyword with text and match type.",
               "properties": {
@@ -151,17 +160,20 @@
           "tags": []
         }
       },
-      "description": "Add negative keywords to a campaign.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to add negative keywords to.\n    keywords: List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
+      "description": "Add negative keywords to a campaign.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to add negative keywords to.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "keywords": {
+            "description": "List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
             "items": {
               "description": "A keyword with text and match type.",
               "properties": {
@@ -208,14 +220,16 @@
           "tags": []
         }
       },
-      "description": "Add negative keywords to a shared negative keyword list.\n\nShared sets are account-level negative keyword lists that can be linked\nto multiple campaigns. Use the ``search`` tool with resource\n``shared_set`` (conditions: ``shared_set.type = 'NEGATIVE_KEYWORDS'``)\nto find shared set IDs and names.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    shared_set_id: The shared set ID to add negative keywords to.\n    keywords: List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
+      "description": "Add negative keywords to a shared negative keyword list.\n\nShared sets are account-level negative keyword lists that can be linked\nto multiple campaigns. Use the ``search`` tool with resource\n``shared_set`` (conditions: ``shared_set.type = 'NEGATIVE_KEYWORDS'``)\nto find shared set IDs and names.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "keywords": {
+            "description": "List of keyword objects, each with \"text\" (str) and \"match_type\" (\"EXACT\", \"PHRASE\", or \"BROAD\").",
             "items": {
               "description": "A keyword with text and match type.",
               "properties": {
@@ -235,6 +249,7 @@
             "type": "array"
           },
           "shared_set_id": {
+            "description": "The shared set ID to add negative keywords to.",
             "type": "string"
           }
         },
@@ -265,20 +280,24 @@
           "tags": []
         }
       },
-      "description": "Create a new ad group in PAUSED state.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to create the ad group in.\n    name: Ad group name.\n    cpc_bid_micros: CPC bid in micros (e.g., 1000000 = $1.00 CPC). Must be positive.",
+      "description": "Create a new ad group in PAUSED state.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to create the ad group in.",
             "type": "string"
           },
           "cpc_bid_micros": {
+            "description": "CPC bid in micros (e.g., 1000000 = $1.00 CPC). Must be positive.",
             "type": "integer"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "name": {
+            "description": "Ad group name.",
             "type": "string"
           }
         },
@@ -310,7 +329,7 @@
           "tags": []
         }
       },
-      "description": "Create a new Performance Max asset group in PAUSED state.\n\nThe asset group is the container that holds all creative assets (images,\ntext, logos) for a P-MAX campaign.\n\nGoogle Ads requires the asset group and its required assets to be created\nin a single atomic ``mutate`` call. Pass the full set of pre-created assets\n(created via ``upload_image_asset`` and ``create_text_asset``) via the\n``assets`` parameter so the asset group is created with all required slots\nfilled. Additional assets can be attached later via\n``link_assets_to_asset_group``.\n\nMinimum required assets for a valid P-MAX asset group:\n  - 3 HEADLINE\n  - 1 LONG_HEADLINE\n  - 2 DESCRIPTION\n  - 1 BUSINESS_NAME\n  - 1 MARKETING_IMAGE\n  - 1 SQUARE_MARKETING_IMAGE\n  - 1 LOGO\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The P-MAX campaign ID.\n    name: Asset group name.\n    final_url: Landing page URL (e.g., \"https://example.com/landing\").\n    assets: List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries to\n        link to the asset group at creation time. Optional; if omitted,\n        the asset group will be created without any linked assets and\n        the API will reject it unless the minimum requirements are met.",
+      "description": "Create a new Performance Max asset group in PAUSED state.\n\nThe asset group is the container that holds all creative assets (images,\ntext, logos) for a P-MAX campaign.\n\nGoogle Ads requires the asset group and its required assets to be created\nin a single atomic ``mutate`` call. Pass the full set of pre-created assets\n(created via ``upload_image_asset`` and ``create_text_asset``) via the\n``assets`` parameter so the asset group is created with all required slots\nfilled. Additional assets can be attached later via\n``link_assets_to_asset_group``.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -339,18 +358,23 @@
                 "type": "null"
               }
             ],
-            "default": null
+            "default": null,
+            "description": "List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries to\nlink to the asset group at creation time. Optional; if omitted,\nthe asset group will be created without any linked assets and\nthe API will reject it unless the minimum requirements are met."
           },
           "campaign_id": {
+            "description": "The P-MAX campaign ID.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "final_url": {
+            "description": "Landing page URL (e.g., \"https://example.com/landing\").",
             "type": "string"
           },
           "name": {
+            "description": "Asset group name.",
             "type": "string"
           }
         },
@@ -382,21 +406,25 @@
           "tags": []
         }
       },
-      "description": "Create a new campaign in PAUSED state with a new daily budget.\n\nThe campaign is created with MAXIMIZE_CONVERSIONS bidding (uncapped)\nand standard network settings (Google Search + Search Partners).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    name: Campaign name.\n    budget_amount_micros: Daily budget in micros (e.g., 50000000 = $50/day). Must be positive.\n    advertising_channel_type: Channel type \u2014 \"SEARCH\", \"DISPLAY\", \"SHOPPING\", \"VIDEO\", etc. Defaults to \"SEARCH\".",
+      "description": "Create a new campaign in PAUSED state with a new daily budget.\n\nThe campaign is created with MAXIMIZE_CONVERSIONS bidding (uncapped)\nand standard network settings (Google Search + Search Partners).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "advertising_channel_type": {
             "default": "SEARCH",
+            "description": "Channel type \u2014 \"SEARCH\", \"DISPLAY\", \"SHOPPING\", \"VIDEO\", etc. Defaults to \"SEARCH\".",
             "type": "string"
           },
           "budget_amount_micros": {
+            "description": "Daily budget in micros (e.g., 50000000 = $50/day). Must be positive.",
             "type": "integer"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "name": {
+            "description": "Campaign name.",
             "type": "string"
           }
         },
@@ -427,15 +455,17 @@
           "tags": []
         }
       },
-      "description": "Create a new Performance Max campaign in PAUSED state with a new daily budget.\n\nPerformance Max campaigns auto-target Search, Display, YouTube, Discover,\nGmail, and Maps using the supplied asset group(s). The campaign is created\nwith MAXIMIZE_CONVERSIONS bidding (uncapped). Asset groups must be created\nseparately via ``create_asset_group`` and populated via ``upload_image_asset``,\n``create_text_asset``, and ``link_assets_to_asset_group``.\n\nBrand Guidelines:\n  When ``brand_guidelines_enabled`` is True, the campaign requires at least\n  one BUSINESS_NAME and one LOGO linked at the campaign level\n  (CampaignAsset). Pass them via ``campaign_assets`` so they are attached\n  atomically with the campaign creation (the API rejects either side if\n  the other is missing). Note: ``brand_guidelines_enabled`` cannot be\n  changed after creation, so set it correctly here.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    name: Campaign name.\n    budget_amount_micros: Daily budget in micros (e.g., 3000000000 = \u00a53,000/day). Must be positive.\n    brand_guidelines_enabled: Whether to enable Brand Guidelines on the campaign. Defaults to False.\n    campaign_assets: List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries\n        to attach as CampaignAsset entries atomically with the campaign.\n        Required when ``brand_guidelines_enabled`` is True (at least one\n        BUSINESS_NAME and one LOGO).",
+      "description": "Create a new Performance Max campaign in PAUSED state with a new daily budget.\n\nPerformance Max campaigns auto-target Search, Display, YouTube, Discover,\nGmail, and Maps using the supplied asset group(s). The campaign is created\nwith MAXIMIZE_CONVERSIONS bidding (uncapped). Asset groups must be created\nseparately via ``create_asset_group`` and populated via ``upload_image_asset``,\n``create_text_asset``, and ``link_assets_to_asset_group``.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "brand_guidelines_enabled": {
             "default": false,
+            "description": "Whether to enable Brand Guidelines on the campaign. Defaults to False.",
             "type": "boolean"
           },
           "budget_amount_micros": {
+            "description": "Daily budget in micros (e.g., 3000000000 = \u00a53,000/day). Must be positive.",
             "type": "integer"
           },
           "campaign_assets": {
@@ -463,12 +493,15 @@
                 "type": "null"
               }
             ],
-            "default": null
+            "default": null,
+            "description": "List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries\nto attach as CampaignAsset entries atomically with the campaign.\nRequired when ``brand_guidelines_enabled`` is True (at least one\nBUSINESS_NAME and one LOGO)."
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "name": {
+            "description": "Campaign name.",
             "type": "string"
           }
         },
@@ -499,26 +532,31 @@
           "tags": []
         }
       },
-      "description": "Create a new responsive search ad (RSA) in PAUSED state.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID to create the ad in.\n    headlines: List of headline texts (min 3, max 15). Each headline max 30 characters.\n    descriptions: List of description texts (min 2, max 4). Each description max 90 characters.\n    final_url: The landing page URL (e.g., \"https://example.com/landing\").\n    path1: Optional display URL path 1 (max 15 characters, e.g., \"products\").\n    path2: Optional display URL path 2 (max 15 characters, e.g., \"shoes\"). Only used if path1 is set.",
+      "description": "Create a new responsive search ad (RSA) in PAUSED state.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "ad_group_id": {
+            "description": "The ad group ID to create the ad in.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "descriptions": {
+            "description": "List of description texts (min 2, max 4). Each description max 90 characters.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "final_url": {
+            "description": "The landing page URL (e.g., \"https://example.com/landing\").",
             "type": "string"
           },
           "headlines": {
+            "description": "List of headline texts (min 3, max 15). Each headline max 30 characters.",
             "items": {
               "type": "string"
             },
@@ -526,10 +564,12 @@
           },
           "path1": {
             "default": "",
+            "description": "Optional display URL path 1 (max 15 characters, e.g., \"products\").",
             "type": "string"
           },
           "path2": {
             "default": "",
+            "description": "Optional display URL path 2 (max 15 characters, e.g., \"shoes\"). Only used if path1 is set.",
             "type": "string"
           }
         },
@@ -562,14 +602,16 @@
           "tags": []
         }
       },
-      "description": "Create a reusable text asset (used for HEADLINE / LONG_HEADLINE / DESCRIPTION / BUSINESS_NAME / CALLOUT).\n\nThe returned asset ID can be linked to a P-MAX asset group via\n``link_assets_to_asset_group`` with the appropriate text field type.\nLength limits depend on field type at link time:\n  - HEADLINE: max 30 chars (display width)\n  - LONG_HEADLINE: max 90 chars\n  - DESCRIPTION: max 90 chars (or 60 for the short slot)\n  - BUSINESS_NAME: max 25 chars\n  - CALLOUT: max 25 chars\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    text: The asset text.",
+      "description": "Create a reusable text asset (used for HEADLINE / LONG_HEADLINE / DESCRIPTION / BUSINESS_NAME / CALLOUT).\n\nThe returned asset ID can be linked to a P-MAX asset group via\n``link_assets_to_asset_group`` with the appropriate text field type.\nLength limits depend on field type at link time:\n  - HEADLINE: max 30 chars (display width)\n  - LONG_HEADLINE: max 90 chars\n  - DESCRIPTION: max 90 chars (or 60 for the short slot)\n  - BUSINESS_NAME: max 25 chars\n  - CALLOUT: max 25 chars",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "text": {
+            "description": "The asset text.",
             "type": "string"
           }
         },
@@ -602,11 +644,12 @@
       "annotations": {
         "readOnlyHint": true
       },
-      "description": "Retrieves the selectable, filterable, and sortable fields for a specific Google Ads resource,\nincluding compatible metrics and segments.\n\nUse this tool to find out which fields you can select, filter by, or sort by\nwhen querying a specific resource (e.g., 'campaign', 'ad_group').\nThis tool also returns metrics and segments that can be selected with the resource.\nTheir names start with 'metrics.' and 'segments.' respectively.\n\nDo not guess fields, you MUST use this tool to discover them before constructing a query for the\n`search` tool.\n\nThe responses of this tool should be cached, as they don't change frequently.\n\nArgs:\n    resource_name: The name of the Google Ads resource (e.g., 'campaign', 'ad_group').",
+      "description": "Retrieves the selectable, filterable, and sortable fields for a specific Google Ads resource,\nincluding compatible metrics and segments.\n\nUse this tool to find out which fields you can select, filter by, or sort by\nwhen querying a specific resource (e.g., 'campaign', 'ad_group').\nThis tool also returns metrics and segments that can be selected with the resource.\nTheir names start with 'metrics.' and 'segments.' respectively.\n\nDo not guess fields, you MUST use this tool to discover them before constructing a query for the\n`search` tool.\n\nThe responses of this tool should be cached, as they don't change frequently.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "resource_name": {
+            "description": "The name of the Google Ads resource (e.g., 'campaign', 'ad_group').",
             "type": "string"
           }
         },
@@ -627,14 +670,16 @@
           "tags": []
         }
       },
-      "description": "Link existing assets to a Performance Max asset group with a field type.\n\nEach entry attaches a single asset (created by ``upload_image_asset`` or\n``create_text_asset``) to the asset group as the given creative slot.\n\nField type must be one of:\n  Image: MARKETING_IMAGE, SQUARE_MARKETING_IMAGE, PORTRAIT_MARKETING_IMAGE,\n         LOGO, LANDSCAPE_LOGO\n  Text:  HEADLINE, LONG_HEADLINE, DESCRIPTION, BUSINESS_NAME, CALLOUT\n  Video: YOUTUBE_VIDEO\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    asset_group_id: The asset group ID to link assets to.\n    assets: List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries.",
+      "description": "Link existing assets to a Performance Max asset group with a field type.\n\nEach entry attaches a single asset (created by ``upload_image_asset`` or\n``create_text_asset``) to the asset group as the given creative slot.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "asset_group_id": {
+            "description": "The asset group ID to link assets to.",
             "type": "string"
           },
           "assets": {
+            "description": "List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries.",
             "items": {
               "description": "An asset to link to an asset group with a specific field type.",
               "properties": {
@@ -654,6 +699,7 @@
             "type": "array"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           }
         },
@@ -684,11 +730,12 @@
           "tags": []
         }
       },
-      "description": "Link existing assets to a campaign with a field type (CampaignAsset).\n\nRequired for Performance Max campaigns with Brand Guidelines enabled,\nwhich mandate at least one BUSINESS_NAME and one LOGO linked at the\ncampaign level (CampaignAsset, not AssetGroupAsset).\n\nField type must be one of:\n  Image: LOGO, LANDSCAPE_LOGO\n  Text:  BUSINESS_NAME\n\nOther field types are technically accepted by the API, but Brand Guidelines\nonly consumes BUSINESS_NAME and LOGO/LANDSCAPE_LOGO at the campaign level.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to link assets to.\n    assets: List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries.",
+      "description": "Link existing assets to a campaign with a field type (CampaignAsset).\n\nRequired for Performance Max campaigns with Brand Guidelines enabled,\nwhich mandate at least one BUSINESS_NAME and one LOGO linked at the\ncampaign level (CampaignAsset, not AssetGroupAsset).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "assets": {
+            "description": "List of {\"asset_id\": \"...\", \"field_type\": \"...\"} entries.",
             "items": {
               "description": "An asset to link to an asset group with a specific field type.",
               "properties": {
@@ -708,9 +755,11 @@
             "type": "array"
           },
           "campaign_id": {
+            "description": "The campaign ID to link assets to.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           }
         },
@@ -741,17 +790,20 @@
           "tags": []
         }
       },
-      "description": "Link a shared set (e.g., negative keyword list) to a campaign.\n\nUse the ``search`` tool with resource ``shared_set`` to find\nshared set IDs and names.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to link the shared set to.\n    shared_set_id: The shared set ID to link.",
+      "description": "Link a shared set (e.g., negative keyword list) to a campaign.\n\nUse the ``search`` tool with resource ``shared_set`` to find\nshared set IDs and names.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to link the shared set to.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "shared_set_id": {
+            "description": "The shared set ID to link.",
             "type": "string"
           }
         },
@@ -817,7 +869,7 @@
       "annotations": {
         "readOnlyHint": true
       },
-      "description": "Fetches data from the Google Ads API using the search method\n\n    Args:\n        customer_id: The id of the customer\n        fields: The fields to fetch\n        resource: The resource to return fields from\n        conditions: List of conditions to filter the data, combined using AND clauses\n        orderings: How the data is ordered\n        limit: The maximum number of rows to return\n\n    \n\n### Hints\n    Language Grammar can be found at https://developers.google.com/google-ads/api/docs/query/grammar\n    All resources and descriptions are found at https://developers.google.com/google-ads/api/fields/v23/overview\n    If the query fails, a ToolError will be raised with the error details.\n\n    For Conversion issues try looking in offline_conversion_upload_conversion_action_summary\n\n### Hint for customer_id\n    should be a string of numbers without punctuation\n    if presented in the form 123-456-7890 remove the hyphens and use 1234567890\n\n### Hints for Dates\n    All dates should be in the form YYYY-MM-DD and must include the dashes (-)\n    Date ranges must be finite and must include a start and end date\n\n### Hints for limits\n    Requests to resource change_event must specify a LIMIT of less than or equal to 10000\n\n### Hints for conversions questions\n    https://developers.google.com/google-ads/api/docs/conversions/upload-summaries \n\n\n### Hints for all resources\n    To find out which specific fields (including compatible metrics and segments) you can select, filter by, or sort by for a given resource, you MUST use the `get_resource_metadata` tool.\n    Do not guess the fields. Use the tool to look them up.\n    Once you have the fields, ensure the whole field name is used (e.g., 'campaign.id', not just 'id'). Wildcards and partial fields are not allowed.\n\n### Valid resources\n    What follows is a list of valid resources that can be queried.\n    accessible_bidding_strategy\naccount_budget\naccount_budget_proposal\naccount_link\nad\nad_group\nad_group_ad\nad_group_ad_asset_combination_view\nad_group_ad_asset_view\nad_group_ad_label\nad_group_asset\nad_group_asset_set\nad_group_audience_view\nad_group_bid_modifier\nad_group_criterion\nad_group_criterion_customizer\nad_group_criterion_label\nad_group_criterion_simulation\nad_group_customizer\nad_group_label\nad_group_simulation\nad_parameter\nad_schedule_view\nage_range_view\nai_max_search_term_ad_combination_view\nandroid_privacy_shared_key_google_ad_group\nandroid_privacy_shared_key_google_campaign\nandroid_privacy_shared_key_google_network_type\napplied_incentive\nasset\nasset_field_type_view\nasset_group\nasset_group_asset\nasset_group_listing_group_filter\nasset_group_product_group_view\nasset_group_signal\nasset_group_top_combination_view\nasset_set\nasset_set_asset\nasset_set_type_view\naudience\nbatch_job\nbidding_data_exclusion\nbidding_seasonality_adjustment\nbidding_strategy\nbidding_strategy_simulation\nbilling_setup\ncall_view\ncampaign\ncampaign_aggregate_asset_view\ncampaign_asset\ncampaign_asset_set\ncampaign_audience_view\ncampaign_bid_modifier\ncampaign_budget\ncampaign_conversion_goal\ncampaign_criterion\ncampaign_customizer\ncampaign_draft\ncampaign_goal_config\ncampaign_group\ncampaign_label\ncampaign_lifecycle_goal\ncampaign_search_term_insight\ncampaign_search_term_view\ncampaign_shared_set\ncampaign_simulation\ncarrier_constant\nchange_event\nchange_status\nchannel_aggregate_asset_view\nclick_view\ncombined_audience\ncontent_criterion_view\nconversion_action\nconversion_custom_variable\nconversion_goal_campaign_config\nconversion_value_rule\nconversion_value_rule_set\ncurrency_constant\ncustom_audience\ncustom_conversion_goal\ncustom_interest\ncustomer\ncustomer_asset\ncustomer_asset_set\ncustomer_client\ncustomer_client_link\ncustomer_conversion_goal\ncustomer_customizer\ncustomer_label\ncustomer_lifecycle_goal\ncustomer_manager_link\ncustomer_negative_criterion\ncustomer_search_term_insight\ncustomer_user_access\ncustomer_user_access_invitation\ncustomizer_attribute\ndata_link\ndetail_content_suitability_placement_view\ndetail_placement_view\ndetailed_demographic\ndisplay_keyword_view\ndistance_view\ndomain_category\ndynamic_search_ads_search_term_view\nexpanded_landing_page_view\nexperiment\nexperiment_arm\nfinal_url_expansion_asset_view\ngender_view\ngeo_target_constant\ngeographic_view\ngoal\ngroup_content_suitability_placement_view\ngroup_placement_view\nhotel_group_view\nhotel_performance_view\nhotel_reconciliation\nincome_range_view\nkeyword_plan\nkeyword_plan_ad_group\nkeyword_plan_ad_group_keyword\nkeyword_plan_campaign\nkeyword_plan_campaign_keyword\nkeyword_theme_constant\nkeyword_view\nlabel\nlanding_page_view\nlanguage_constant\nlead_form_submission_data\nlife_event\nlocal_services_employee\nlocal_services_lead\nlocal_services_lead_conversation\nlocal_services_verification_artifact\nlocation_interest_view\nlocation_view\nmanaged_placement_view\nmatched_location_interest_view\nmedia_file\nmobile_app_category_constant\nmobile_device_constant\noffline_conversion_upload_client_summary\noffline_conversion_upload_conversion_action_summary\noffline_user_data_job\noperating_system_version_constant\npaid_organic_search_term_view\nparental_status_view\nper_store_view\nperformance_max_placement_view\nproduct_category_constant\nproduct_group_view\nproduct_link\nproduct_link_invitation\nqualifying_question\nrecommendation\nrecommendation_subscription\nremarketing_action\nsearch_term_view\nshared_criterion\nshared_set\nshopping_performance_view\nshopping_product\nsmart_campaign_search_term_view\nsmart_campaign_setting\ntargeting_expansion_view\nthird_party_app_analytics_link\ntopic_constant\ntopic_view\ntravel_activity_group_view\ntravel_activity_performance_view\nuser_interest\nuser_list\nuser_list_customer_type\nuser_location_view\nvideo\nwebpage_view\nyou_tube_video_upload",
+      "description": "Fetches data from the Google Ads API using the search method\n\n    Args:\n        customer_id: The id of the customer\n        fields: The fields to fetch\n        resource: The resource to return fields from\n        conditions: List of conditions to filter the data, combined using AND clauses\n        orderings: How the data is ordered\n        limit: The maximum number of rows to return\n\n    \n\n### Hints\n    Language Grammar can be found at https://developers.google.com/google-ads/api/docs/query/grammar\n    All resources and descriptions are found at https://developers.google.com/google-ads/api/fields/latest/overview\n    If the query fails, a ToolError will be raised with the error details.\n\n    For Conversion issues try looking in offline_conversion_upload_conversion_action_summary\n\n### Hint for customer_id\n    should be a string of numbers without punctuation\n    if presented in the form 123-456-7890 remove the hyphens and use 1234567890\n\n### Hints for Dates\n    All dates should be in the form YYYY-MM-DD and must include the dashes (-)\n    Date ranges must be finite and must include a start and end date\n\n### Hints for limits\n    Requests to resource change_event must specify a LIMIT of less than or equal to 10000\n\n### Hints for conversions questions\n    https://developers.google.com/google-ads/api/docs/conversions/upload-summaries \n\n\n### Hints for all resources\n    To find out which specific fields (including compatible metrics and segments) you can select, filter by, or sort by for a given resource, you MUST use the `get_resource_metadata` tool.\n    Do not guess the fields. Use the tool to look them up.\n    Once you have the fields, ensure the whole field name is used (e.g., 'campaign.id', not just 'id'). Wildcards and partial fields are not allowed.\n\n### Valid resources\n    What follows is a list of valid resources that can be queried.\n    accessible_bidding_strategy\naccount_budget\naccount_budget_proposal\naccount_link\nad\nad_group\nad_group_ad\nad_group_ad_asset_combination_view\nad_group_ad_asset_view\nad_group_ad_label\nad_group_asset\nad_group_asset_set\nad_group_audience_view\nad_group_bid_modifier\nad_group_criterion\nad_group_criterion_customizer\nad_group_criterion_label\nad_group_criterion_simulation\nad_group_customizer\nad_group_label\nad_group_simulation\nad_parameter\nad_schedule_view\nage_range_view\nai_max_search_term_ad_combination_view\nandroid_privacy_shared_key_google_ad_group\nandroid_privacy_shared_key_google_campaign\nandroid_privacy_shared_key_google_network_type\napplied_incentive\nasset\nasset_field_type_view\nasset_group\nasset_group_asset\nasset_group_listing_group_filter\nasset_group_product_group_view\nasset_group_signal\nasset_group_top_combination_view\nasset_set\nasset_set_asset\nasset_set_type_view\naudience\nbatch_job\nbidding_data_exclusion\nbidding_seasonality_adjustment\nbidding_strategy\nbidding_strategy_simulation\nbilling_setup\ncall_view\ncampaign\ncampaign_aggregate_asset_view\ncampaign_asset\ncampaign_asset_set\ncampaign_audience_view\ncampaign_bid_modifier\ncampaign_budget\ncampaign_conversion_goal\ncampaign_criterion\ncampaign_customizer\ncampaign_draft\ncampaign_goal_config\ncampaign_group\ncampaign_label\ncampaign_lifecycle_goal\ncampaign_search_term_insight\ncampaign_search_term_view\ncampaign_shared_set\ncampaign_simulation\ncarrier_constant\nchange_event\nchange_status\nchannel_aggregate_asset_view\nclick_view\ncombined_audience\ncontent_criterion_view\nconversion_action\nconversion_custom_variable\nconversion_goal_campaign_config\nconversion_value_rule\nconversion_value_rule_set\ncurrency_constant\ncustom_audience\ncustom_conversion_goal\ncustom_interest\ncustomer\ncustomer_asset\ncustomer_asset_set\ncustomer_client\ncustomer_client_link\ncustomer_conversion_goal\ncustomer_customizer\ncustomer_label\ncustomer_lifecycle_goal\ncustomer_manager_link\ncustomer_negative_criterion\ncustomer_search_term_insight\ncustomer_user_access\ncustomer_user_access_invitation\ncustomizer_attribute\ndata_link\ndetail_content_suitability_placement_view\ndetail_placement_view\ndetailed_demographic\ndisplay_keyword_view\ndistance_view\ndomain_category\ndynamic_search_ads_search_term_view\nexpanded_landing_page_view\nexperiment\nexperiment_arm\nfinal_url_expansion_asset_view\ngender_view\ngeo_target_constant\ngeographic_view\ngoal\ngroup_content_suitability_placement_view\ngroup_placement_view\nhotel_group_view\nhotel_performance_view\nhotel_reconciliation\nincome_range_view\nkeyword_plan\nkeyword_plan_ad_group\nkeyword_plan_ad_group_keyword\nkeyword_plan_campaign\nkeyword_plan_campaign_keyword\nkeyword_theme_constant\nkeyword_view\nlabel\nlanding_page_view\nlanguage_constant\nlead_form_submission_data\nlife_event\nlocal_services_employee\nlocal_services_lead\nlocal_services_lead_conversation\nlocal_services_verification_artifact\nlocation_interest_view\nlocation_view\nmanaged_placement_view\nmatched_location_interest_view\nmedia_file\nmobile_app_category_constant\nmobile_device_constant\noffline_conversion_upload_client_summary\noffline_conversion_upload_conversion_action_summary\noffline_user_data_job\noperating_system_version_constant\npaid_organic_search_term_view\nparental_status_view\nper_store_view\nperformance_max_placement_view\nproduct_category_constant\nproduct_group_view\nproduct_link\nproduct_link_invitation\nqualifying_question\nrecommendation\nrecommendation_subscription\nremarketing_action\nsearch_term_view\nshared_criterion\nshared_set\nshopping_performance_view\nshopping_product\nsmart_campaign_search_term_view\nsmart_campaign_setting\ntargeting_expansion_view\nthird_party_app_analytics_link\ntopic_constant\ntopic_view\ntravel_activity_group_view\ntravel_activity_performance_view\nuser_interest\nuser_list\nuser_list_customer_type\nuser_location_view\nvideo\nwebpage_view\nyou_tube_video_upload",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -890,17 +942,20 @@
           "tags": []
         }
       },
-      "description": "Set ad schedules for a campaign. This replaces all existing ad schedules.\n\nEach schedule defines a day and time window when ads should run.\nTo run ads Monday-Friday all day, pass 5 schedule entries (one per day)\nwith start_hour=0, end_hour=24.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to set schedules for.\n    schedules: List of schedule objects, each with:\n        - \"day_of_week\": \"MONDAY\"|\"TUESDAY\"|\"WEDNESDAY\"|\"THURSDAY\"|\"FRIDAY\"|\"SATURDAY\"|\"SUNDAY\"\n        - \"start_hour\": 0-23\n        - \"start_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")\n        - \"end_hour\": 0-24 (24 means end of day)\n        - \"end_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")",
+      "description": "Set ad schedules for a campaign. This replaces all existing ad schedules.\n\nEach schedule defines a day and time window when ads should run.\nTo run ads Monday-Friday all day, pass 5 schedule entries (one per day)\nwith start_hour=0, end_hour=24.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to set schedules for.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "schedules": {
+            "description": "List of schedule objects, each with:\n- \"day_of_week\": \"MONDAY\"|\"TUESDAY\"|\"WEDNESDAY\"|\"THURSDAY\"|\"FRIDAY\"|\"SATURDAY\"|\"SUNDAY\"\n- \"start_hour\": 0-23\n- \"start_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")\n- \"end_hour\": 0-24 (24 means end of day)\n- \"end_minute\": \"ZERO\"|\"FIFTEEN\"|\"THIRTY\"|\"FORTY_FIVE\" (default: \"ZERO\")",
             "items": {
               "description": "An ad schedule entry defining a day and time window.",
               "properties": {
@@ -959,17 +1014,20 @@
           "tags": []
         }
       },
-      "description": "Update an ad's final URL.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_id: The ad ID to update.\n    final_url: New final URL (e.g., \"https://example.com/landing\").",
+      "description": "Update an ad's final URL.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "ad_id": {
+            "description": "The ad ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "final_url": {
+            "description": "New final URL (e.g., \"https://example.com/landing\").",
             "type": "string"
           }
         },
@@ -1000,17 +1058,20 @@
           "tags": []
         }
       },
-      "description": "Update an ad group's CPC bid amount.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID to update.\n    cpc_bid_micros: New CPC bid in micros (e.g., 1500000 = $1.50 CPC). Must be positive.",
+      "description": "Update an ad group's CPC bid amount.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "ad_group_id": {
+            "description": "The ad group ID to update.",
             "type": "string"
           },
           "cpc_bid_micros": {
+            "description": "New CPC bid in micros (e.g., 1500000 = $1.50 CPC). Must be positive.",
             "type": "integer"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           }
         },
@@ -1041,17 +1102,20 @@
           "tags": []
         }
       },
-      "description": "Update an ad group's status (ENABLED or PAUSED).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID to update.\n    status: New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
+      "description": "Update an ad group's status (ENABLED or PAUSED).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "ad_group_id": {
+            "description": "The ad group ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "status": {
+            "description": "New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
             "type": "string"
           }
         },
@@ -1082,20 +1146,24 @@
           "tags": []
         }
       },
-      "description": "Update an ad's status (ENABLED or PAUSED).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    ad_group_id: The ad group ID containing the ad.\n    ad_id: The ad ID to update.\n    status: New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
+      "description": "Update an ad's status (ENABLED or PAUSED).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "ad_group_id": {
+            "description": "The ad group ID containing the ad.",
             "type": "string"
           },
           "ad_id": {
+            "description": "The ad ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "status": {
+            "description": "New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
             "type": "string"
           }
         },
@@ -1127,17 +1195,20 @@
           "tags": []
         }
       },
-      "description": "Update a Performance Max asset group's final URL.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    asset_group_id: The asset group ID to update.\n    final_url: New final URL (e.g., \"https://example.com/landing\").",
+      "description": "Update a Performance Max asset group's final URL.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "asset_group_id": {
+            "description": "The asset group ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "final_url": {
+            "description": "New final URL (e.g., \"https://example.com/landing\").",
             "type": "string"
           }
         },
@@ -1168,17 +1239,20 @@
           "tags": []
         }
       },
-      "description": "Update a Performance Max asset group's status (ENABLED or PAUSED).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    asset_group_id: The asset group ID to update.\n    status: New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
+      "description": "Update a Performance Max asset group's status (ENABLED or PAUSED).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "asset_group_id": {
+            "description": "The asset group ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "status": {
+            "description": "New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
             "type": "string"
           }
         },
@@ -1209,17 +1283,20 @@
           "tags": []
         }
       },
-      "description": "Update a campaign's bidding strategy.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to update.\n    strategy_type: One of \"TARGET_CPA\", \"TARGET_ROAS\", \"MAXIMIZE_CONVERSIONS\", \"MAXIMIZE_CONVERSION_VALUE\".\n    target_value_micros: Target CPA in micros (required for TARGET_CPA, e.g., 5000000 = $5). Optional for MAXIMIZE_CONVERSIONS (uncapped if omitted).\n    target_roas: Target ROAS as a float (required for TARGET_ROAS, e.g., 4.0 = 400% ROAS). Optional for MAXIMIZE_CONVERSION_VALUE (uncapped if omitted).",
+      "description": "Update a campaign's bidding strategy.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "strategy_type": {
+            "description": "One of \"TARGET_CPA\", \"TARGET_ROAS\", \"MAXIMIZE_CONVERSIONS\", \"MAXIMIZE_CONVERSION_VALUE\".",
             "type": "string"
           },
           "target_roas": {
@@ -1231,7 +1308,8 @@
                 "type": "null"
               }
             ],
-            "default": null
+            "default": null,
+            "description": "Target ROAS as a float (required for TARGET_ROAS, e.g., 4.0 = 400% ROAS). Optional for MAXIMIZE_CONVERSION_VALUE (uncapped if omitted)."
           },
           "target_value_micros": {
             "anyOf": [
@@ -1242,7 +1320,8 @@
                 "type": "null"
               }
             ],
-            "default": null
+            "default": null,
+            "description": "Target CPA in micros (required for TARGET_CPA, e.g., 5000000 = $5). Optional for MAXIMIZE_CONVERSIONS (uncapped if omitted)."
           }
         },
         "required": [
@@ -1272,17 +1351,20 @@
           "tags": []
         }
       },
-      "description": "Toggle Brand Guidelines on a Performance Max campaign.\n\nWhen ``enabled`` is True, the campaign will require at least one\nBUSINESS_NAME and one LOGO linked at the campaign level\n(CampaignAsset). Use ``link_assets_to_campaign`` BEFORE enabling if\nthose assets are not already attached as CampaignAsset entries.\n\nWhen ``enabled`` is False, BUSINESS_NAME and LOGO must instead be\nattached as AssetGroupAsset entries on every asset group.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The P-MAX campaign ID.\n    enabled: True to enable Brand Guidelines, False to disable.",
+      "description": "Toggle Brand Guidelines on a Performance Max campaign.\n\nWhen ``enabled`` is True, the campaign will require at least one\nBUSINESS_NAME and one LOGO linked at the campaign level\n(CampaignAsset). Use ``link_assets_to_campaign`` BEFORE enabling if\nthose assets are not already attached as CampaignAsset entries.\n\nWhen ``enabled`` is False, BUSINESS_NAME and LOGO must instead be\nattached as AssetGroupAsset entries on every asset group.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The P-MAX campaign ID.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "enabled": {
+            "description": "True to enable Brand Guidelines, False to disable.",
             "type": "boolean"
           }
         },
@@ -1313,17 +1395,20 @@
           "tags": []
         }
       },
-      "description": "Update a campaign budget amount. Amount is in micros (1 currency unit = 1,000,000 micros).\n\nFor example, to set a daily budget of $50, pass amount_micros=50000000.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    budget_id: The campaign budget ID to update.\n    amount_micros: New budget amount in micros (e.g., 50000000 = $50). Must be positive.",
+      "description": "Update a campaign budget amount. Amount is in micros (1 currency unit = 1,000,000 micros).\n\nFor example, to set a daily budget of $50, pass amount_micros=50000000.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "amount_micros": {
+            "description": "New budget amount in micros (e.g., 50000000 = $50). Must be positive.",
             "type": "integer"
           },
           "budget_id": {
+            "description": "The campaign budget ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           }
         },
@@ -1354,23 +1439,28 @@
           "tags": []
         }
       },
-      "description": "Update a campaign conversion goal's biddable setting.\n\nControls whether the campaign's automated bidding strategy optimizes\nfor this conversion goal.\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID.\n    category: Conversion goal category (e.g., \"SIGNUP\", \"PURCHASE\", \"SUBMIT_LEAD_FORM\").\n    origin: Conversion goal origin (e.g., \"WEBSITE\", \"GOOGLE_HOSTED\").\n    biddable: Whether the bidding strategy should optimize for this goal.",
+      "description": "Update a campaign conversion goal's biddable setting.\n\nControls whether the campaign's automated bidding strategy optimizes\nfor this conversion goal.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "biddable": {
+            "description": "Whether the bidding strategy should optimize for this goal.",
             "type": "boolean"
           },
           "campaign_id": {
+            "description": "The campaign ID.",
             "type": "string"
           },
           "category": {
+            "description": "Conversion goal category (e.g., \"SIGNUP\", \"PURCHASE\", \"SUBMIT_LEAD_FORM\").",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "origin": {
+            "description": "Conversion goal origin (e.g., \"WEBSITE\", \"GOOGLE_HOSTED\").",
             "type": "string"
           }
         },
@@ -1403,17 +1493,20 @@
           "tags": []
         }
       },
-      "description": "Update a campaign's status (ENABLED or PAUSED).\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    campaign_id: The campaign ID to update.\n    status: New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
+      "description": "Update a campaign's status (ENABLED or PAUSED).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "campaign_id": {
+            "description": "The campaign ID to update.",
             "type": "string"
           },
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "status": {
+            "description": "New status \u2014 must be \"ENABLED\" or \"PAUSED\".",
             "type": "string"
           }
         },
@@ -1444,17 +1537,20 @@
           "tags": []
         }
       },
-      "description": "Upload a local image file as a Google Ads image asset.\n\nThe returned asset ID can be linked to a P-MAX asset group via\n``link_assets_to_asset_group`` with an image field type\n(MARKETING_IMAGE / SQUARE_MARKETING_IMAGE / PORTRAIT_MARKETING_IMAGE /\nLOGO / LANDSCAPE_LOGO).\n\nRecommended dimensions:\n  - MARKETING_IMAGE (1.91:1): 1200x628 or larger\n  - SQUARE_MARKETING_IMAGE (1:1): 1200x1200 or larger\n  - PORTRAIT_MARKETING_IMAGE (4:5): 960x1200 or larger\n  - LOGO (1:1): 1200x1200, recommended >= 128x128\n  - LANDSCAPE_LOGO (4:1): 1200x300\n\nArgs:\n    customer_id: The Google Ads customer ID (digits only, no dashes).\n    name: Asset display name (used to identify the asset in the UI).\n    image_path: Absolute or ``~``-expanded local file path (PNG/JPG).",
+      "description": "Upload a local image file as a Google Ads image asset.\n\nThe returned asset ID can be linked to a P-MAX asset group via\n``link_assets_to_asset_group`` with an image field type\n(MARKETING_IMAGE / SQUARE_MARKETING_IMAGE / PORTRAIT_MARKETING_IMAGE /\nLOGO / LANDSCAPE_LOGO).",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "customer_id": {
+            "description": "The Google Ads customer ID (digits only, no dashes).",
             "type": "string"
           },
           "image_path": {
+            "description": "Absolute or ``~``-expanded local file path (PNG/JPG).",
             "type": "string"
           },
           "name": {
+            "description": "Asset display name (used to identify the asset in the UI).",
             "type": "string"
           }
         },
