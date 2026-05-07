@@ -185,10 +185,12 @@ def update_campaign_asset_automation(
         campaign.resource_name = campaign_service.campaign_path(
             customer_id, campaign_id
         )
+        setting_type = client.get_type("Campaign").AssetAutomationSetting
         for t, s in merged:
-            entry = campaign.asset_automation_settings.add()
+            entry = setting_type()
             entry.asset_automation_type = t
             entry.asset_automation_status = s
+            campaign.asset_automation_settings.append(entry)
         campaign_operation.update_mask = field_mask_pb2.FieldMask(
             paths=["asset_automation_settings"]
         )
