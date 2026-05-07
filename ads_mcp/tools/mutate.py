@@ -114,43 +114,93 @@ def update_campaign_status(
 
 
 @mcp.tool()
-def update_campaign_url_expansion_opt_out(
+def update_campaign_asset_automation(
     customer_id: str,
     campaign_id: str,
+    asset_automation_type: str,
     opt_out: bool,
 ) -> str:
-    """Update a Performance Max campaign's URL expansion opt-out setting.
+    """Opt a Performance Max campaign in or out of a single AssetAutomationType.
 
-    When opted out (true), only the final URLs in the asset group (or URLs from
-    Merchant Center / business data feeds) are targeted. When opted in (false),
-    Google may expand to other URLs across the entire domain. Default is false.
-    Only applicable to Performance Max campaigns.
+    Replaces the legacy `Campaign.url_expansion_opt_out` field, which was
+    removed in Google Ads API v22 (2025-10-15). To disable Final URL expansion,
+    pass asset_automation_type="FINAL_URL_EXPANSION_TEXT_ASSET_AUTOMATION" and
+    opt_out=True.
+
+    The Campaign.asset_automation_settings field is a repeated message keyed by
+    AssetAutomationType. This tool reads the current settings, upserts the
+    requested type, and writes the full list back so unrelated automations are
+    preserved.
 
     Args:
         customer_id: The Google Ads customer ID (digits only, no dashes).
         campaign_id: The campaign ID to update.
-        opt_out: True to disable URL expansion, False to enable (the default).
+        asset_automation_type: AssetAutomationType enum name (e.g.
+            "FINAL_URL_EXPANSION_TEXT_ASSET_AUTOMATION", "TEXT_ASSET_AUTOMATION").
+        opt_out: True to set OPTED_OUT, False to set OPTED_IN.
     """
     try:
         client = utils.get_googleads_client()
+        type_enum = client.enums.AssetAutomationTypeEnum
+        status_enum = client.enums.AssetAutomationStatusEnum
+
+        try:
+            type_value = type_enum[asset_automation_type]
+        except KeyError:
+            valid = [
+                m.name
+                for m in type_enum
+                if m.name not in ("UNSPECIFIED", "UNKNOWN")
+            ]
+            return (
+                f"Error: invalid asset_automation_type "
+                f"'{asset_automation_type}'. Valid values: {', '.join(valid)}"
+            )
+
+        target_status = (
+            status_enum.OPTED_OUT if opt_out else status_enum.OPTED_IN
+        )
+
+        # Read current settings to preserve unrelated automations.
+        ga_service = utils.get_googleads_service("GoogleAdsService")
+        query = (
+            "SELECT campaign.asset_automation_settings FROM campaign "
+            f"WHERE campaign.id = {campaign_id}"
+        )
+        response = ga_service.search(customer_id=customer_id, query=query)
+        existing = []
+        for row in response:
+            for s in row.campaign.asset_automation_settings:
+                existing.append((s.asset_automation_type, s.asset_automation_status))
+
+        # Upsert the target type.
+        merged = [
+            (t, s) for t, s in existing if t != type_value
+        ]
+        merged.append((type_value, target_status))
+
         campaign_service = utils.get_googleads_service("CampaignService")
         campaign_operation = client.get_type("CampaignOperation")
-
         campaign = campaign_operation.update
         campaign.resource_name = campaign_service.campaign_path(
             customer_id, campaign_id
         )
-        campaign.url_expansion_opt_out = opt_out
+        for t, s in merged:
+            entry = campaign.asset_automation_settings.add()
+            entry.asset_automation_type = t
+            entry.asset_automation_status = s
         campaign_operation.update_mask = field_mask_pb2.FieldMask(
-            paths=["url_expansion_opt_out"]
+            paths=["asset_automation_settings"]
         )
 
-        response = campaign_service.mutate_campaigns(
+        mutate_response = campaign_service.mutate_campaigns(
             customer_id=customer_id, operations=[campaign_operation]
         )
+        status_str = "OPTED_OUT" if opt_out else "OPTED_IN"
         return (
-            f"Updated campaign {response.results[0].resource_name} "
-            f"url_expansion_opt_out to {opt_out}"
+            f"Updated campaign {mutate_response.results[0].resource_name}: "
+            f"{asset_automation_type} -> {status_str} "
+            f"(total automation settings: {len(merged)})"
         )
     except GoogleAdsException as ex:
         return _format_google_ads_error(ex)
