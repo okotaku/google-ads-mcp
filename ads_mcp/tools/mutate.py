@@ -114,6 +114,51 @@ def update_campaign_status(
 
 
 @mcp.tool()
+def update_campaign_url_expansion_opt_out(
+    customer_id: str,
+    campaign_id: str,
+    opt_out: bool,
+) -> str:
+    """Update a Performance Max campaign's URL expansion opt-out setting.
+
+    When opted out (true), only the final URLs in the asset group (or URLs from
+    Merchant Center / business data feeds) are targeted. When opted in (false),
+    Google may expand to other URLs across the entire domain. Default is false.
+    Only applicable to Performance Max campaigns.
+
+    Args:
+        customer_id: The Google Ads customer ID (digits only, no dashes).
+        campaign_id: The campaign ID to update.
+        opt_out: True to disable URL expansion, False to enable (the default).
+    """
+    try:
+        client = utils.get_googleads_client()
+        campaign_service = utils.get_googleads_service("CampaignService")
+        campaign_operation = client.get_type("CampaignOperation")
+
+        campaign = campaign_operation.update
+        campaign.resource_name = campaign_service.campaign_path(
+            customer_id, campaign_id
+        )
+        campaign.url_expansion_opt_out = opt_out
+        campaign_operation.update_mask = field_mask_pb2.FieldMask(
+            paths=["url_expansion_opt_out"]
+        )
+
+        response = campaign_service.mutate_campaigns(
+            customer_id=customer_id, operations=[campaign_operation]
+        )
+        return (
+            f"Updated campaign {response.results[0].resource_name} "
+            f"url_expansion_opt_out to {opt_out}"
+        )
+    except GoogleAdsException as ex:
+        return _format_google_ads_error(ex)
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
 def update_ad_group_status(
     customer_id: str,
     ad_group_id: str,
