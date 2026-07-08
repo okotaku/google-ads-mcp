@@ -29,6 +29,9 @@ import google.auth
 from ads_mcp.mcp_header_interceptor import MCPHeaderInterceptor
 import os
 import importlib.resources
+import contextlib
+import subprocess
+from unittest.mock import patch
 
 # filename for generated field information used by search
 _GAQL_FILENAME = "gaql_resources.txt"
@@ -40,6 +43,25 @@ logging.basicConfig(level=logging.INFO)
 # read-only scope; access is restricted to read methods by the tools this
 # server exposes (see ads_mcp/tools/).
 _ADS_SCOPE = "https://www.googleapis.com/auth/adwords"
+
+
+@contextlib.contextmanager
+def prevent_stdio_inheritance():
+    """Prevents child processes from inheriting the parent's stdio handles.
+
+    Fixes a deadlock on Windows where `google.auth.default()` spawns `gcloud`
+    via subprocess without redirecting stdin, causing it to inherit the
+    ProactorEventLoop's overlapping I/O handles used by MCP's stdio transport.
+    """
+    original_popen = subprocess.Popen
+
+    def safe_popen(*args, **kwargs):
+        if kwargs.get("stdin") is None:
+            kwargs["stdin"] = subprocess.DEVNULL
+        return original_popen(*args, **kwargs)
+
+    with patch("subprocess.Popen", new=safe_popen):
+        yield
 
 
 def _create_credentials() -> google.auth.credentials.Credentials:
@@ -59,7 +81,8 @@ def _create_credentials() -> google.auth.credentials.Credentials:
         return Credentials(token=token_obj.token)
 
     # 3. Fall back to Application Default Credentials.
-    credentials, _ = google.auth.default(scopes=[_ADS_SCOPE])
+    with prevent_stdio_inheritance():
+        credentials, _ = google.auth.default(scopes=[_ADS_SCOPE])
     return credentials
 
 

@@ -18,6 +18,36 @@ to provide several
 - `list_accessible_customers`: Returns ids of customers directly accessible
   by the user authenticating the call.
 
+### Configuring and Namespacing Tools
+
+The Google Ads MCP server uses the `tools_config.yaml` to let you selectively enable or disable individual tools or tool categories (namespaces) and customize their namespace prefixes.
+
+A default `tools_config.yaml` with all tools enabled is bundled with the package, so the server works out of the box with no extra setup. To customize your installation, the server resolves the configuration in the following order:
+
+1. An explicit path set via the `GOOGLE_ADS_MCP_TOOLS_CONFIG` environment variable.
+2. A `tools_config.yaml` file in the current working directory.
+3. The default `tools_config.yaml` bundled with the package.
+
+If an explicitly requested configuration file (via the environment variable) is missing, or any resolved file is invalid, the server raises an error and fails to start.
+
+#### Configuration Example:
+```yaml
+namespaces:
+  # Option 1: Enable category 'customers' with default prefix -> "customers_list_accessible_customers"
+  customers: true
+
+  # Option 2: Enable category 'search' with a custom prefix -> "query_search"
+  search: "query"
+
+  # Option 3: Fine-grained control over tools in a category
+  metadata:
+    enabled: true
+    prefix: "metadata"
+    enabled_tools:
+      - get_resource_metadata: true
+```
+
+
 ### Resources available
 
 - `discovery-document`: Retrieve the Google Ads API discovery document. Provides the discovery document for the latest version of the Google Ads API, which describes the API surface, including resources, methods, and schemas. Host LLMs should access this resource to understand the structure of the Google Ads API and discover available features.
@@ -74,7 +104,7 @@ To enable it, set the following environment variables:
 - `GOOGLE_ADS_MCP_OAUTH_CLIENT_SECRET`: Your Google Cloud OAuth 2.0 Client Secret.
 - `GOOGLE_ADS_MCP_BASE_URL`: (Optional) The base URL where the server is accessible (defaults to `http://localhost:8080`).
 
-Once this is enabled, you can authenticate to the API through your MCP client: for example, in Gemini CLI, the command `/mcp auth google-ads-mcp` triggers the authentication flow.
+Once this is enabled, you can authenticate to the API through your MCP client.
 
 When these variables are set, the server automatically switches to the `streamable-http` transport (SSE/HTTP) instead of `stdio`.
 
@@ -139,15 +169,11 @@ In the utils.py file, change get_googleads_client() to use the load_from_storage
 Add the server to your MCP client's configuration. Below are examples for
 popular clients.
 
-#### Gemini CLI / Gemini Code Assist
+#### Antigravity CLI / Antigravity Code Assist
 
-1.  Install [Gemini
-    CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/index.md)
-    or [Gemini Code
-    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist).
+1.  Install [Antigravity CLI](https://antigravity.google/product/antigravity-cli) or Antigravity Code Assist.
 
-1.  Create or edit the file at `~/.gemini/settings.json`, adding your server
-    to the `mcpServers` list.
+1.  Configure your server. Refer to the docs at [https://antigravity.google/docs/mcp](https://antigravity.google/docs/mcp) for details on setting up MCP servers.
 
 - Option 1: Using FastMCP OAuth Proxy (Streamable HTTP)
 
@@ -177,8 +203,6 @@ popular clients.
     `env` object. Replace `YOUR_PROJECT_ID` in the following example with the
     [project ID](https://support.google.com/googleapi/answer/7014113) of your
     Google Cloud project.
-
-
 
     ```json
     {
@@ -308,7 +332,7 @@ gcloud run deploy google-ads-mcp \
 
 ### Step 3: Configure MCP Client
 
-Once deployed, update your MCP client configuration (e.g., `~/.gemini/settings.json`) to use the Cloud Run URL.
+Once deployed, update your MCP client configuration (refer to the docs at [https://antigravity.google/docs/mcp](https://antigravity.google/docs/mcp)) to use the Cloud Run URL.
 
 ```json
 {
@@ -371,9 +395,9 @@ This repository also provides [Agent Skills](https://agentskills.io/), which are
 
 To use these skills, you need to point your skills-compatible AI agent to the skill directory.
 
-For example, if you are using [Gemini CLI](https://github.com/google-gemini/gemini-cli), you can install the skill by copying the folder to your skills directory or referencing it. See the [Gemini CLI Skills documentation](https://geminicli.com/docs/cli/skills/) for detailed instructions.
+For example, if you are using [Antigravity CLI](https://antigravity.google/product/antigravity-cli), you can install the skill by copying the folder to your skills directory or referencing it. See the [Antigravity CLI documentation](https://antigravity.google/docs/skills) for detailed instructions.
 
-While that guide is specific to Gemini CLI, Agent Skills are an open standard and can be loaded by any compatible agent or LLM tool that supports the format (e.g., Claude Code, Cursor).
+While that guide is specific to Antigravity CLI, Agent Skills are an open standard and can be loaded by any compatible agent or LLM tool that supports the format (e.g., Claude Code, Cursor).
 
 
 ## Contributing

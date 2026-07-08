@@ -23,8 +23,11 @@ from pydantic import BaseModel
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import field_mask_pb2
 
-from ads_mcp.coordinator import mcp
+from fastmcp import FastMCP
+
 import ads_mcp.utils as utils
+
+mutate_mcp = FastMCP("mutate")
 
 
 def _ensure_list(value: object) -> list:
@@ -68,7 +71,7 @@ def _format_google_ads_error(ex: GoogleAdsException) -> str:
     return f"Google Ads API error: {'; '.join(errors)}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_campaign_status(
     customer_id: str,
     campaign_id: str,
@@ -113,7 +116,7 @@ def update_campaign_status(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_campaign_asset_automation(
     customer_id: str,
     campaign_id: str,
@@ -171,12 +174,12 @@ def update_campaign_asset_automation(
         existing = []
         for row in response:
             for s in row.campaign.asset_automation_settings:
-                existing.append((s.asset_automation_type, s.asset_automation_status))
+                existing.append(
+                    (s.asset_automation_type, s.asset_automation_status)
+                )
 
         # Upsert the target type.
-        merged = [
-            (t, s) for t, s in existing if t != type_value
-        ]
+        merged = [(t, s) for t, s in existing if t != type_value]
         merged.append((type_value, target_status))
 
         campaign_service = utils.get_googleads_service("CampaignService")
@@ -210,7 +213,7 @@ def update_campaign_asset_automation(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_ad_group_status(
     customer_id: str,
     ad_group_id: str,
@@ -255,7 +258,7 @@ def update_ad_group_status(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_ad_status(
     customer_id: str,
     ad_group_id: str,
@@ -300,7 +303,7 @@ def update_ad_status(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_campaign_budget(
     customer_id: str,
     budget_id: str,
@@ -344,7 +347,7 @@ def update_campaign_budget(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_bidding_strategy(
     customer_id: str,
     campaign_id: str,
@@ -415,7 +418,7 @@ def update_bidding_strategy(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def add_keywords(
     customer_id: str,
     ad_group_id: str,
@@ -465,7 +468,7 @@ def add_keywords(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def add_negative_keywords(
     customer_id: str,
     campaign_id: str,
@@ -531,7 +534,7 @@ _CHANNEL_TYPE = {
 }
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def create_campaign(
     customer_id: str,
     name: str,
@@ -606,7 +609,7 @@ def create_campaign(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def create_ad_group(
     customer_id: str,
     campaign_id: str,
@@ -649,7 +652,7 @@ def create_ad_group(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_ad_final_url(
     customer_id: str,
     ad_id: str,
@@ -688,7 +691,7 @@ def update_ad_final_url(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_asset_group_final_url(
     customer_id: str,
     asset_group_id: str,
@@ -729,7 +732,7 @@ def update_asset_group_final_url(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_asset_group_status(
     customer_id: str,
     asset_group_id: str,
@@ -775,7 +778,7 @@ def update_asset_group_status(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_campaign_conversion_goal(
     customer_id: str,
     campaign_id: str,
@@ -820,7 +823,7 @@ def update_campaign_conversion_goal(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def add_shared_set_negative_keywords(
     customer_id: str,
     shared_set_id: str,
@@ -879,7 +882,7 @@ def add_shared_set_negative_keywords(
         return _format_google_ads_error(ex)
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def link_shared_set_to_campaign(
     customer_id: str,
     campaign_id: str,
@@ -922,7 +925,7 @@ def link_shared_set_to_campaign(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def create_responsive_search_ad(
     customer_id: str,
     ad_group_id: str,
@@ -995,7 +998,7 @@ def create_responsive_search_ad(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_ad_group_bid(
     customer_id: str,
     ad_group_id: str,
@@ -1056,7 +1059,7 @@ _MINUTE_OF_HOUR = {
 }
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def set_ad_schedule(
     customer_id: str,
     campaign_id: str,
@@ -1222,7 +1225,7 @@ def _read_image_bytes(image_path: str) -> bytes:
     return data
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def create_pmax_campaign(
     customer_id: str,
     name: str,
@@ -1364,7 +1367,7 @@ def create_pmax_campaign(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def update_campaign_brand_guidelines(
     customer_id: str,
     campaign_id: str,
@@ -1412,7 +1415,7 @@ def update_campaign_brand_guidelines(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def create_asset_group(
     customer_id: str,
     campaign_id: str,
@@ -1540,7 +1543,7 @@ def create_asset_group(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def upload_image_asset(
     customer_id: str,
     name: str,
@@ -1597,7 +1600,7 @@ def upload_image_asset(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def create_text_asset(
     customer_id: str,
     text: str,
@@ -1644,7 +1647,7 @@ def create_text_asset(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def link_assets_to_campaign(
     customer_id: str,
     campaign_id: str,
@@ -1716,7 +1719,7 @@ def link_assets_to_campaign(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def link_assets_to_asset_group(
     customer_id: str,
     asset_group_id: str,
@@ -1786,7 +1789,7 @@ def link_assets_to_asset_group(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def add_campaign_language(
     customer_id: str,
     campaign_id: str,
@@ -1841,7 +1844,7 @@ def add_campaign_language(
         return f"Error: {type(ex).__name__}: {ex}"
 
 
-@mcp.tool()
+@mutate_mcp.tool()
 def add_campaign_location(
     customer_id: str,
     campaign_id: str,
